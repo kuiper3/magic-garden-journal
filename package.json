@@ -1,0 +1,14 @@
+{
+  "name": "magic-garden-journal",
+  "version": "0.1.0",
+  "description": "Personal crop and pet variant tracker for Magic Garden. Syncs across phone and PC via Supabase.",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve . --cors"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["magic-garden", "game-tracker", "journal"],
+  "license": "UNLICENSED"
+}

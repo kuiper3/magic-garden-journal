@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magic Garden Journal</title>
+  <meta name="description" content="Personal crop and pet variant tracker for Magic Garden">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/nav.css">
+</head>
+<body>
+
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+
+  <!-- ── AUTH GATE ─────────────────────────────── -->
+  <div id="auth-gate" class="auth-gate">
+    <div class="auth-card">
+
+      <div class="auth-header">
+        <div class="auth-emblem" aria-hidden="true">🌿</div>
+        <h1 class="auth-title">Magic Garden<br><em>Journal</em></h1>
+        <p class="auth-subtitle">Personal progress tracker</p>
+      </div>
+
+      <form id="signin-form" class="auth-form" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input
+            type="email" id="email" name="email"
+            autocomplete="email" required
+            placeholder="you@example.com"
+          >
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input
+            type="password" id="password" name="password"
+            autocomplete="current-password" required
+            placeholder="••••••••"
+          >
+        </div>
+
+        <div id="auth-error" class="auth-error hidden" role="alert"></div>
+
+        <button type="submit" id="signin-btn" class="btn-signin">
+          <span class="btn-label">Sign in</span>
+          <span class="btn-spinner hidden" aria-hidden="true"></span>
+        </button>
+      </form>
+
+      <p class="auth-version">v0.1.0 · Magic Garden Journal</p>
+    </div>
+  </div>
+
+  <!-- ── APP SHELL (mounted after auth) ────────── -->
+  <div id="app" class="app hidden">
+    <nav id="nav" class="nav">
+      <!-- Rendered by nav.js in 0.2.0 -->
+    </nav>
+    <main id="main" class="main">
+      <!-- Page modules render here -->
+    </main>
+  </div>
+
+  <!-- App entry point -->
+  <script type="module" src="js/app.js"></script>
+
+  <!-- Cosmetic background animation (non-module, no dependencies) -->
+  <script>
+    (function () {
+      const canvas = document.getElementById('bg-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const motes = [];
+      const COUNT = 28;
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+
+      function randomMote() {
+        return {
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          r: Math.random() * 1.6 + 0.4,
+          speed: Math.random() * 0.25 + 0.08,
+          drift: (Math.random() - 0.5) * 0.15,
+          opacity: 0,
+          maxOpacity: Math.random() * 0.45 + 0.1,
+          phase: Math.random() * Math.PI * 2,
+          phaseSpeed: Math.random() * 0.008 + 0.004,
+        };
+      }
+
+      resize();
+      window.addEventListener('resize', resize);
+      for (let i = 0; i < COUNT; i++) motes.push(randomMote());
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        motes.forEach(m => {
+          m.phase += m.phaseSpeed;
+          m.opacity = m.maxOpacity * (0.5 + 0.5 * Math.sin(m.phase));
+          m.y -= m.speed;
+          m.x += m.drift;
+          if (m.y < -10) { Object.assign(m, randomMote()); m.y = canvas.height + 10; }
+
+          ctx.beginPath();
+          ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(180, 220, 140, ${m.opacity})`;
+          ctx.fill();
+        });
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+  </script>
+
+</body>
+</html>
