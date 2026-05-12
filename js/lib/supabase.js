@@ -1,17 +1,26 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/lib/supabase.js
-// v0.1.0 — stub; initialised in 0.2.0
+// v0.2.0 — live Supabase client
 // ═══════════════════════════════════════════════
 
-// 0.2.0 TODO:
-//   1. Load env vars (via /api/config or injected at build)
-//   2. Import createClient from supabase-js CDN or npm
-//   3. Export the configured client
-//
-// Example:
-//   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-//   const SUPABASE_URL  = window.__env?.SUPABASE_URL;
-//   const SUPABASE_ANON = window.__env?.SUPABASE_ANON_KEY;
-//   export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-export const supabase = null; // replaced in 0.2.0
+let _supabase = null;
+
+/**
+ * Returns the initialised Supabase client.
+ * Fetches public config from /api/config on first call, then caches.
+ * @returns {Promise<import('@supabase/supabase-js').SupabaseClient>}
+ */
+export async function getSupabase() {
+  if (_supabase) return _supabase;
+
+  const res = await fetch('/api/config');
+  if (!res.ok) throw new Error('Failed to load app config.');
+
+  const { supabaseUrl, supabaseAnon } = await res.json();
+  if (!supabaseUrl || !supabaseAnon) throw new Error('Supabase config missing from server.');
+
+  _supabase = createClient(supabaseUrl, supabaseAnon);
+  return _supabase;
+}

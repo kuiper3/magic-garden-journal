@@ -1,43 +1,49 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/lib/auth.js
-// v0.1.0 — stub; Supabase wired in 0.2.0
+// v0.2.0 — live Supabase auth
 // ═══════════════════════════════════════════════
 
-// 0.2.0 TODO: replace stubs with supabase.auth calls.
-// Import the supabase client from './supabase.js' once it's set up.
+import { getSupabase } from './supabase.js';
 
 /**
  * Initialise auth state listener.
+ * Calls onSignedIn or onSignedOut whenever the session changes.
  * @param {{ onSignedIn: Function, onSignedOut: Function }} callbacks
  */
 export async function initAuth({ onSignedIn, onSignedOut } = {}) {
-  // 0.2.0: supabase.auth.onAuthStateChange((event, session) => { ... })
-  // For now, no-op. showAuthGate() will fire via getSession() returning null.
-  void onSignedIn;
-  void onSignedOut;
+  const supabase = await getSupabase();
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (session) {
+      onSignedIn?.();
+    } else {
+      onSignedOut?.();
+    }
+  });
 }
 
 /**
  * Returns the current session, or null if not signed in.
  */
 export async function getSession() {
-  // 0.2.0: const { data } = await supabase.auth.getSession(); return data.session;
-  return null;
+  const supabase = await getSupabase();
+  const { data } = await supabase.auth.getSession();
+  return data.session ?? null;
 }
 
 /**
  * Sign in with email + password.
- * Throws on failure.
+ * Throws on failure with Supabase's error message.
  */
 export async function signIn(email, password) {
-  // 0.2.0: const { error } = await supabase.auth.signInWithPassword({ email, password });
-  // if (error) throw error;
-  throw new Error('Authentication not yet configured. (milestone 0.2.0)');
+  const supabase = await getSupabase();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
 }
 
 /**
  * Sign out the current user.
  */
 export async function signOut() {
-  // 0.2.0: await supabase.auth.signOut();
+  const supabase = await getSupabase();
+  await supabase.auth.signOut();
 }
