@@ -1,29 +1,42 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/lib/cache.js
-// v0.1.0 — stub; implemented in 0.3.0
+// v0.3.0 — localStorage TTL cache
 // ═══════════════════════════════════════════════
-// Simple localStorage cache with TTL.
-// Keys prefixed to avoid collisions.
+// All keys are prefixed with 'mgj:' to avoid
+// collisions with anything else in localStorage.
 // ═══════════════════════════════════════════════
+
+const PREFIX = 'mgj:';
 
 /**
  * Get a cached value, or fetch + store it if stale/missing.
- * @param {string}   key      Cache key (e.g. 'aries:plants')
- * @param {number}   ttl      Max age in ms
- * @param {Function} fetcher  Async function returning fresh data
+ * @param {string}   key      Short cache key, e.g. 'aries:plants'
+ * @param {number}   ttl      Max age in milliseconds
+ * @param {Function} fetcher  Async fn that returns fresh data
  * @returns {Promise<any>}
  */
 export async function get(key, ttl, fetcher) {
-  // 0.3.0 TODO:
-  //   const raw = localStorage.getItem('mgj:' + key);
-  //   if (raw) {
-  //     const { ts, data } = JSON.parse(raw);
-  //     if (Date.now() - ts < ttl) return data;
-  //   }
-  //   const data = await fetcher();
-  //   localStorage.setItem('mgj:' + key, JSON.stringify({ ts: Date.now(), data }));
-  //   return data;
-  throw new Error('cache.get not yet implemented (milestone 0.3.0)');
+  const storageKey = PREFIX + key;
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (raw) {
+      const { ts, data } = JSON.parse(raw);
+      if (Date.now() - ts < ttl) return data;
+    }
+  } catch {
+    // Corrupt entry — fall through to fresh fetch
+    localStorage.removeItem(PREFIX + key);
+  }
+
+  const data = await fetcher();
+
+  try {
+    localStorage.setItem(storageKey, JSON.stringify({ ts: Date.now(), data }));
+  } catch {
+    // localStorage full or unavailable — just return the data without caching
+  }
+
+  return data;
 }
 
 /**
@@ -31,14 +44,14 @@ export async function get(key, ttl, fetcher) {
  * @param {string} key
  */
 export function invalidate(key) {
-  localStorage.removeItem('mgj:' + key);
+  localStorage.removeItem(PREFIX + key);
 }
 
 /**
- * Clear all cache keys for this app.
+ * Clear ALL Magic Garden Journal cache entries from localStorage.
  */
 export function clearAll() {
   Object.keys(localStorage)
-    .filter(k => k.startsWith('mgj:'))
+    .filter(k => k.startsWith(PREFIX))
     .forEach(k => localStorage.removeItem(k));
 }
