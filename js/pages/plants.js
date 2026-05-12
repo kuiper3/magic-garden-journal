@@ -1,38 +1,53 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/pages/plants.js
-// v0.5.1 — sort toggle + variant modal
+// v0.6.0 — orchestrator: tabs, toolbar, state
 // ═══════════════════════════════════════════════
 
-import {
-  getPlantsSorted, fetchMutations,
-  CROP_VARIANTS, PLANT_SORT_MODES,
-} from '../lib/aries.js';
+import { getPlantsSorted, fetchMutations, CROP_VARIANTS, PLANT_SORT_MODES } from '../lib/aries.js';
 import { getSupabase } from '../lib/supabase.js';
+import { buildCard, buildRow, filterPlants } from './plants-grid.js';
+import { openModal, closeModal } from './plants-modal.js';
+import { renderConditions } from './plants-conditions.js';
 
-// ── Module state ──────────────────────────────
-let _container   = null;
-let _plants      = [];
-let _mutations   = {};
-let _discovered  = new Map();
-let _currentUser = null;
-let _sortMode    = PLANT_SORT_MODES.JOURNAL;
+// ── State ─────────────────────────────────────
+let _plants = [], _mutations = {}, _discovered = new Map(), _user = null;
+let _activeTab    = 'plants';   // 'plants' | 'conditions'
+let _viewMode     = 'cards';    // 'cards'  | 'list'
+let _sortMode     = PLANT_SORT_MODES.JOURNAL;
+let _missingOnly  = false;
+let _search       = '';
 
 // ── Page interface ────────────────────────────
 
 export function render(container) {
-  _container = container;
   container.innerHTML = `
     <link rel="stylesheet" href="css/plants.css">
-    <div class="page-header">
-      <div class="page-header-row">
-        <div>
-          <h2 class="page-title">Plants</h2>
-          <p class="page-subtitle">${CROP_VARIANTS.length} variants per crop</p>
+    <div class="plants-toolbar">
+      <div class="toolbar-row toolbar-top">
+        <div class="tab-group">
+          <button class="tab-btn active" data-tab="plants">🌱 Plants</button>
+          <button class="tab-btn" data-tab="conditions">⛅ Conditions</button>
         </div>
-        <div class="sort-toggle" id="sort-toggle">
-          <button class="sort-btn active" data-sort="journal" title="In-game Journal order">Journal</button>
-          <button class="sort-btn" data-sort="price"   title="Sort by seed price">Price</button>
-          <button class="sort-btn" data-sort="az"      title="Sort A → Z">A–Z</button>
+        <div class="overall-progress-wrap">
+          <div class="overall-bar-track"><div class="overall-bar-fill" id="overall-bar"></div></div>
+          <span class="overall-text" id="overall-text">—</span>
+        </div>
+      </div>
+      <div class="toolbar-row toolbar-controls" id="plants-controls">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="plant-search" placeholder="Search…" autocomplete="off">
+        </div>
+        <div class="ctrl-group">
+          <div class="sort-toggle">
+            <button class="sort-btn active" data-sort="journal">Journal</button>
+            <button class="sort-btn" data-sort="az">A–Z</button>
+          </div>
+          <div class="view-toggle">
+            <button class="view-btn active" data-view="cards" title="Card view">⊞</button>
+            <button class="view-btn" data-view="list" title="List view">☰</button>
+          </div>
+          <button class="filter-pill${_missingOnly ? ' active' : ''}" id="missing-toggle">Missing only</button>
         </div>
       </div>
     </div>
@@ -43,65 +58,145 @@ export function render(container) {
 
 export async function init() {
   try {
-    await loadPlants();
-    document.getElementById('plants-content')?.addEventListener('click', onCardClick);
-    document.getElementById('sort-toggle')?.addEventListener('click', onSortClick);
+    const supabase = await getSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    _user = user;
+
+    const [plants, mutations, entries] = await Promise.all([
+      getPlantsSorted(_sortMode), fetchMutations(), fetchJournalEntries(supabase, user),
+    ]);
+    _plants    = plants;
+    _mutations = mutations;
+    _discovered = buildDiscoveredMap(entries);
+
+    updateOverallProgress();
+    renderCurrentView();
+    bindToolbar();
   } catch (err) {
     console.error('[plants]', err);
-    showError(err.message);
+    document.getElementById('plants-content').innerHTML =
+      `<div class="state-error"><span>⚠️ ${err.message}</span></div>`;
   }
 }
 
 export function destroy() {
   closeModal();
-  _container = null;
-  _plants = []; _mutations = {}; _discovered = new Map(); _currentUser = null;
+  _plants = []; _mutations = {}; _discovered = new Map(); _user = null;
 }
 
-// ── Sort toggle ───────────────────────────────
+// ── Toolbar binding ───────────────────────────
 
-async function onSortClick(e) {
-  const btn = e.target.closest('.sort-btn');
-  if (!btn) return;
-  const mode = btn.dataset.sort;
-  if (mode === _sortMode) return;
+function bindToolbar() {
+  document.querySelector('.tab-group')?.addEventListener('click', async e => {
+    const btn = e.target.closest('.tab-btn');
+    if (!btn || btn.dataset.tab === _activeTab) return;
+    _activeTab = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === _activeTab));
+    document.getElementById('plants-controls').style.display = _activeTab === 'plants' ? '' : 'none';
+    renderCurrentView();
+  });
 
-  _sortMode = mode;
-  document.querySelectorAll('.sort-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.sort === mode));
+  document.querySelector('.sort-toggle')?.addEventListener('click', async e => {
+    const btn = e.target.closest('.sort-btn');
+    if (!btn || btn.dataset.sort === _sortMode) return;
+    _sortMode = btn.dataset.sort;
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === _sortMode));
+    _plants = await getPlantsSorted(_sortMode);
+    renderCurrentView();
+  });
 
+  document.querySelector('.view-toggle')?.addEventListener('click', e => {
+    const btn = e.target.closest('.view-btn');
+    if (!btn || btn.dataset.view === _viewMode) return;
+    _viewMode = btn.dataset.view;
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === _viewMode));
+    renderCurrentView();
+  });
+
+  document.getElementById('missing-toggle')?.addEventListener('click', e => {
+    _missingOnly = !_missingOnly;
+    e.currentTarget.classList.toggle('active', _missingOnly);
+    renderCurrentView();
+  });
+
+  document.getElementById('plant-search')?.addEventListener('input', e => {
+    _search = e.target.value;
+    renderCurrentView();
+  });
+
+  document.getElementById('plants-content')?.addEventListener('click', e => {
+    if (_activeTab !== 'plants') return;
+    const card = e.target.closest('[data-plant-key]');
+    if (!card) return;
+    const plant = _plants.find(p => p.key === card.dataset.plantKey);
+    if (plant) openModal(plant, _mutations, _discovered, _user, onModalToggle);
+  });
+}
+
+// ── View rendering ────────────────────────────
+
+function renderCurrentView() {
   const content = document.getElementById('plants-content');
-  if (content) content.innerHTML =
-    `<div class="state-loading"><div class="spinner"></div><span>Sorting…</span></div>`;
-
-  _plants = await getPlantsSorted(_sortMode);
-  renderGrid();
+  if (!content) return;
+  if (_activeTab === 'conditions') {
+    renderConditions(content, _plants, _discovered, onConditionToggle);
+    return;
+  }
+  const visible = filterPlants(_plants, _discovered, { searchQuery: _search, missingOnly: _missingOnly });
+  if (!visible.length) {
+    content.innerHTML = `<div class="state-empty">No plants match your filters.</div>`;
+    return;
+  }
+  if (_viewMode === 'list') {
+    content.innerHTML = `<div class="plants-list">${visible.map(p => buildRow(p, _discovered)).join('')}</div>`;
+  } else {
+    content.innerHTML = `<div class="plants-grid">${visible.map(p => buildCard(p, _discovered)).join('')}</div>`;
+  }
 }
 
-// ── Data loading ──────────────────────────────
+// ── Callbacks from modal / conditions ────────
 
-async function loadPlants() {
-  const supabase = await getSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-  _currentUser = user;
-
-  const [plants, mutations, entries] = await Promise.all([
-    getPlantsSorted(_sortMode),
-    fetchMutations(),
-    fetchJournalEntries(supabase, user),
-  ]);
-
-  _plants    = plants;
-  _mutations = mutations;
-  _discovered = buildDiscoveredMap(entries);
-  renderGrid();
+function onModalToggle(plantKey, variantKey, wasDiscovered) {
+  if (!_discovered.has(plantKey)) _discovered.set(plantKey, new Set());
+  const set = _discovered.get(plantKey);
+  if (variantKey) { wasDiscovered ? set.delete(variantKey) : set.add(variantKey); }
+  updateOverallProgress();
+  refreshCardInGrid(plantKey);
 }
+
+function onConditionToggle(plantKey) {
+  updateOverallProgress();
+  refreshCardInGrid(plantKey);
+}
+
+function refreshCardInGrid(plantKey) {
+  const el = document.querySelector(`[data-plant-key="${plantKey}"]`);
+  if (!el) return;
+  const plant = _plants.find(p => p.key === plantKey);
+  if (!plant) return;
+  const html = _viewMode === 'list' ? buildRow(plant, _discovered) : buildCard(plant, _discovered);
+  el.outerHTML = html;
+}
+
+// ── Overall progress ──────────────────────────
+
+function updateOverallProgress() {
+  const total = _plants.length * CROP_VARIANTS.length;
+  let disc = 0;
+  _discovered.forEach(set => { disc += set.size; });
+  const pct = total > 0 ? Math.round((disc / total) * 100) : 0;
+  const bar  = document.getElementById('overall-bar');
+  const text = document.getElementById('overall-text');
+  if (bar)  bar.style.width  = `${pct}%`;
+  if (text) text.textContent = `${pct}% · ${disc.toLocaleString()} / ${total.toLocaleString()}`;
+}
+
+// ── Supabase ──────────────────────────────────
 
 async function fetchJournalEntries(supabase, user) {
   if (!user) return [];
-  const { data, error } = await supabase
-    .from('journal_entries').select('item_key, variant_key')
-    .eq('user_id', user.id).eq('item_type', 'crop');
+  const { data, error } = await supabase.from('journal_entries')
+    .select('item_key, variant_key').eq('user_id', user.id).eq('item_type', 'crop');
   if (error) { console.warn('[plants] journal fetch failed:', error.message); return []; }
   return data ?? [];
 }
@@ -113,197 +208,4 @@ function buildDiscoveredMap(entries) {
     map.get(item_key).add(variant_key);
   }
   return map;
-}
-
-// ── Grid ──────────────────────────────────────
-
-function renderGrid() {
-  const content = document.getElementById('plants-content');
-  if (!content) return;
-  if (!_plants.length) {
-    content.innerHTML = `<div class="state-error"><span class="error-icon">🌱</span><span>No plant data. Try refreshing.</span></div>`;
-    return;
-  }
-  content.innerHTML = `<div class="plants-grid">${_plants.map(buildCard).join('')}</div>`;
-}
-
-function buildCard(plant) {
-  const { key } = plant;
-  const name   = plant.crop?.name ?? key;
-  const sprite = plant.crop?.sprite ?? plant.seed?.sprite ?? null;
-  const disc   = _discovered.get(key)?.size ?? 0;
-  const total  = CROP_VARIANTS.length;
-  const pct    = Math.round((disc / total) * 100);
-  const done   = disc >= total;
-  const buy    = plant.seed?.purchasable === true;
-
-  const img = sprite
-    ? `<img class="plant-sprite" src="${sprite}" alt="${name}" loading="lazy"
-           onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'plant-sprite-missing',textContent:'🌿'}))">`
-    : `<div class="plant-sprite-missing">🌿</div>`;
-
-  return `
-    <div class="plant-card${buy ? ' purchasable' : ''}" data-plant-key="${key}">
-      ${img}
-      <span class="plant-name">${name}</span>
-      <div class="plant-progress">
-        <span class="progress-label">${disc} / ${total}</span>
-        <div class="progress-bar-track">
-          <div class="progress-bar-fill${done ? ' complete' : ''}" style="width:${pct}%"></div>
-        </div>
-      </div>
-    </div>`;
-}
-
-function refreshCard(plantKey) {
-  const card = document.querySelector(`[data-plant-key="${plantKey}"]`);
-  if (!card) return;
-  const plant = _plants.find(p => p.key === plantKey);
-  if (plant) card.outerHTML = buildCard(plant);
-}
-
-// ── Modal ─────────────────────────────────────
-
-function onCardClick(e) {
-  const card = e.target.closest('[data-plant-key]');
-  if (!card) return;
-  const plant = _plants.find(p => p.key === card.dataset.plantKey);
-  if (plant) openModal(plant);
-}
-
-function openModal(plant) {
-  closeModal();
-  const key    = plant.key;
-  const name   = plant.crop?.name ?? key;
-  const sprite = plant.crop?.sprite ?? plant.seed?.sprite ?? null;
-  const disc   = _discovered.get(key) ?? new Set();
-
-  const tiles = CROP_VARIANTS.map(variant => {
-    const isDisc    = disc.has(variant);
-    const varSprite = getVariantSprite(variant, sprite);
-    return `
-      <div class="variant-tile${isDisc ? ' discovered' : ''}"
-           data-variant="${variant}" data-plant-key="${key}">
-        <div class="variant-img-wrap">
-          ${varSprite
-            ? `<img src="${varSprite}" alt="${variant}" loading="lazy"
-                   onerror="this.style.display='none'">`
-            : `<span class="variant-emoji">${variantEmoji(variant)}</span>`}
-          ${isDisc ? `<span class="variant-check">✓</span>` : ''}
-        </div>
-        <span class="variant-name">${variant}</span>
-      </div>`;
-  }).join('');
-
-  const overlay = document.createElement('div');
-  overlay.id = 'plant-modal';
-  overlay.className = 'modal-overlay';
-  overlay.innerHTML = `
-    <div class="modal-card" role="dialog" aria-modal="true">
-      <div class="modal-header">
-        ${sprite ? `<img class="modal-crop-sprite" src="${sprite}" alt="${name}">` : ''}
-        <div class="modal-crop-info">
-          <h3 class="modal-crop-name">${name}</h3>
-          <p class="modal-crop-progress" id="modal-progress-text">
-            ${disc.size} / ${CROP_VARIANTS.length} variants discovered
-          </p>
-        </div>
-        <button class="modal-close" aria-label="Close">✕</button>
-      </div>
-      <div class="modal-variants-grid">${tiles}</div>
-    </div>`;
-
-  overlay.addEventListener('click', onModalClick);
-  document.body.appendChild(overlay);
-  requestAnimationFrame(() => overlay.classList.add('open'));
-  document.addEventListener('keydown', onModalKeydown);
-}
-
-function closeModal() {
-  document.getElementById('plant-modal')?.remove();
-  document.removeEventListener('keydown', onModalKeydown);
-}
-
-function onModalKeydown(e) { if (e.key === 'Escape') closeModal(); }
-
-async function onModalClick(e) {
-  if (e.target.classList.contains('modal-overlay') ||
-      e.target.classList.contains('modal-close')) { closeModal(); return; }
-
-  const tile = e.target.closest('.variant-tile');
-  if (!tile) return;
-
-  const plantKey   = tile.dataset.plantKey;
-  const variantKey = tile.dataset.variant;
-  const wasDisc    = tile.classList.contains('discovered');
-
-  // Optimistic update
-  tile.classList.toggle('discovered', !wasDisc);
-  if (!wasDisc) {
-    tile.querySelector('.variant-img-wrap')
-        .insertAdjacentHTML('beforeend', `<span class="variant-check">✓</span>`);
-  } else {
-    tile.querySelector('.variant-check')?.remove();
-  }
-
-  if (!_discovered.has(plantKey)) _discovered.set(plantKey, new Set());
-  const set = _discovered.get(plantKey);
-  wasDisc ? set.delete(variantKey) : set.add(variantKey);
-
-  const prog = document.getElementById('modal-progress-text');
-  if (prog) prog.textContent = `${set.size} / ${CROP_VARIANTS.length} variants discovered`;
-  refreshCard(plantKey);
-
-  try {
-    await persistToggle(plantKey, variantKey, wasDisc);
-  } catch (err) {
-    console.error('[plants] toggle failed, reverting:', err);
-    tile.classList.toggle('discovered', wasDisc);
-    if (wasDisc) {
-      tile.querySelector('.variant-img-wrap')
-          .insertAdjacentHTML('beforeend', `<span class="variant-check">✓</span>`);
-    } else {
-      tile.querySelector('.variant-check')?.remove();
-    }
-    wasDisc ? set.add(variantKey) : set.delete(variantKey);
-    refreshCard(plantKey);
-  }
-}
-
-async function persistToggle(plantKey, variantKey, wasDiscovered) {
-  const supabase = await getSupabase();
-  if (wasDiscovered) {
-    const { error } = await supabase.from('journal_entries').delete()
-      .eq('user_id', _currentUser.id).eq('item_type', 'crop')
-      .eq('item_key', plantKey).eq('variant_key', variantKey);
-    if (error) throw error;
-  } else {
-    const { error } = await supabase.from('journal_entries').insert({
-      user_id: _currentUser.id, item_type: 'crop',
-      item_key: plantKey, variant_key: variantKey,
-    });
-    if (error) throw error;
-  }
-}
-
-// ── Helpers ───────────────────────────────────
-
-function getVariantSprite(variant, cropSprite) {
-  if (variant === 'Normal' || variant === 'MaxWeight') return cropSprite;
-  return _mutations[variant]?.sprite ?? null;
-}
-
-function variantEmoji(variant) {
-  const map = {
-    Normal:'🌿', Wet:'💧', Chilled:'❄️', Frozen:'🧊', Thunderstruck:'⚡',
-    Dawnlit:'🌸', Amberlit:'🌕', Dawnbound:'💜', Amberbound:'🟠',
-    Gold:'✨', Rainbow:'🌈', MaxWeight:'⚖️',
-  };
-  return map[variant] ?? '🌿';
-}
-
-function showError(msg) {
-  const content = document.getElementById('plants-content');
-  if (content) content.innerHTML =
-    `<div class="state-error"><span class="error-icon">⚠️</span><span>${msg}</span></div>`;
 }
