@@ -4,10 +4,9 @@
 // ═══════════════════════════════════════════════
 // 0.5.0 adds: variant drill-down modal + Supabase writes
 
-import { getPlantsSorted, getMutationsSorted } from '../lib/aries.js';
+import { getPlantsSorted, CROP_VARIANTS } from '../lib/aries.js';
 import { getSupabase } from '../lib/supabase.js';
 
-// ── Module-level cleanup refs ─────────────────
 let _container = null;
 
 // ── Page interface ────────────────────────────
@@ -19,7 +18,7 @@ export function render(container) {
     <link rel="stylesheet" href="css/plants.css">
     <div class="page-header">
       <h2 class="page-title">Plants</h2>
-      <p class="page-subtitle">Track your discovered crop variants</p>
+      <p class="page-subtitle">Track your discovered crop variants · ${CROP_VARIANTS.length} variants per crop</p>
     </div>
     <div id="plants-content">
       <div class="state-loading">
@@ -46,21 +45,15 @@ export function destroy() {
 // ── Data loading ──────────────────────────────
 
 async function loadPlants() {
-  // Fetch catalog + journal entries in parallel
-  const [plants, mutations, entries] = await Promise.all([
+  // Plants catalog + journal entries in parallel — no mutations fetch needed,
+  // variant list is a game constant (CROP_VARIANTS, 12 entries).
+  const [plants, entries] = await Promise.all([
     getPlantsSorted(),
-    getMutationsSorted(),
     fetchJournalEntries(),
   ]);
 
-  // Total variant count = all mutations + 1 for Normal
-  // (MaxWeight is included in mutations from the API)
-  const totalVariants = mutations.length + 1;
-
-  // Build a quick lookup: plantKey → Set of discovered variant_keys
-  const discoveredMap = buildDiscoveredMap(entries, 'crop');
-
-  renderGrid(plants, totalVariants, discoveredMap);
+  const discoveredMap = buildDiscoveredMap(entries);
+  renderGrid(plants, discoveredMap);
 }
 
 async function fetchJournalEntries() {
@@ -83,10 +76,8 @@ async function fetchJournalEntries() {
   }
 }
 
-/**
- * Builds a Map<itemKey, Set<variantKey>> from Supabase rows.
- */
-function buildDiscoveredMap(entries, itemType) {
+/** Builds Map<plantKey, Set<variantKey>> from Supabase rows. */
+function buildDiscoveredMap(entries) {
   const map = new Map();
   for (const { item_key, variant_key } of entries) {
     if (!map.has(item_key)) map.set(item_key, new Set());
@@ -97,7 +88,7 @@ function buildDiscoveredMap(entries, itemType) {
 
 // ── Rendering ─────────────────────────────────
 
-function renderGrid(plants, totalVariants, discoveredMap) {
+function renderGrid(plants, discoveredMap) {
   const content = document.getElementById('plants-content');
   if (!content) return;
 
@@ -110,31 +101,33 @@ function renderGrid(plants, totalVariants, discoveredMap) {
     return;
   }
 
-  const cards = plants.map(plant => buildCard(plant, totalVariants, discoveredMap)).join('');
+  const cards = plants.map(plant => buildCard(plant, discoveredMap)).join('');
   content.innerHTML = `<div class="plants-grid">${cards}</div>`;
 }
 
-function buildCard(plant, totalVariants, discoveredMap) {
+function buildCard(plant, discoveredMap) {
   const key         = plant.key;
   const name        = plant.crop?.name ?? key;
   const sprite      = plant.crop?.sprite ?? plant.seed?.sprite ?? null;
   const purchasable = plant.seed?.purchasable === true;
   const discovered  = discoveredMap.get(key)?.size ?? 0;
-  const pct         = totalVariants > 0 ? Math.round((discovered / totalVariants) * 100) : 0;
-  const complete    = discovered >= totalVariants;
+  const total       = CROP_VARIANTS.length; // always 12
+  const pct         = Math.round((discovered / total) * 100);
+  const complete    = discovered >= total;
 
   const spriteHtml = sprite
-    ? `<img class="plant-sprite" src="${sprite}" alt="${name}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'plant-sprite-missing',textContent:'🌿'}))">`
+    ? `<img class="plant-sprite" src="${sprite}" alt="${name}" loading="lazy"
+           onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'plant-sprite-missing',textContent:'🌿'}))">`
     : `<div class="plant-sprite-missing">🌿</div>`;
 
   return `
     <div class="plant-card${purchasable ? ' purchasable' : ''}"
          data-plant-key="${key}"
-         title="${name} — ${discovered}/${totalVariants} variants">
+         title="${name} · ${discovered}/${total} variants">
       ${spriteHtml}
       <span class="plant-name">${name}</span>
       <div class="plant-progress">
-        <span class="progress-label">${discovered} / ${totalVariants}</span>
+        <span class="progress-label">${discovered} / ${total}</span>
         <div class="progress-bar-track">
           <div class="progress-bar-fill${complete ? ' complete' : ''}"
                style="width: ${pct}%"></div>
@@ -143,7 +136,7 @@ function buildCard(plant, totalVariants, discoveredMap) {
     </div>`;
 }
 
-// ── Helpers ───────────────────────────────────
+// ── Error state ───────────────────────────────
 
 function showError(message) {
   const content = document.getElementById('plants-content');
