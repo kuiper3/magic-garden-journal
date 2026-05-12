@@ -1,0 +1,163 @@
+/* ═══════════════════════════════════════════════
+   Magic Garden Journal — plants.css  v0.4.0
+   ═══════════════════════════════════════════════ */
+
+/* ── Page header ────────────────────────────── */
+.page-header {
+  margin-bottom: 1.75rem;
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--surface);
+  letter-spacing: -0.01em;
+}
+
+.page-subtitle {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.35);
+  margin-top: 0.3rem;
+}
+
+/* ── Loading / error states ─────────────────── */
+.state-loading,
+.state-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1rem;
+  color: rgba(255,255,255,0.4);
+  font-size: 0.9rem;
+}
+
+.state-error { color: #e07070; }
+.state-error .error-icon { font-size: 2rem; }
+
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid rgba(90,154,110,0.2);
+  border-top-color: var(--green-light);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ── Plants grid ────────────────────────────── */
+.plants-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.85rem;
+}
+
+/* ── Plant card ─────────────────────────────── */
+.plant-card {
+  background: var(--bg-2);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 0.75rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  position: relative;
+}
+
+.plant-card:hover {
+  border-color: rgba(90,154,110,0.4);
+  background: var(--bg-3);
+  transform: translateY(-2px);
+}
+
+/* Purchasable badge — small green dot top-right */
+.plant-card.purchasable::after {
+  content: '';
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 7px; height: 7px;
+  background: var(--green-light);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--green-light);
+}
+
+/* ── Sprite ─────────────────────────────────── */
+.plant-sprite {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.plant-sprite-missing {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  opacity: 0.3;
+}
+
+/* ── Name ───────────────────────────────────── */
+.plant-name {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.75);
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+/* ── Progress bar ───────────────────────────── */
+.plant-progress {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.progress-label {
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.3);
+  text-align: center;
+}
+
+.progress-bar-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--green-light);
+  border-radius: 2px;
+  transition: width 0.4s var(--ease);
+  min-width: 0%;
+}
+
+.progress-bar-fill.complete {
+  background: var(--gold-light);
+  box-shadow: 0 0 6px rgba(212, 168, 83, 0.5);
+}
+
+/* ── Responsive ─────────────────────────────── */
+@media (max-width: 640px) {
+  .plants-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 0.65rem;
+  }
+  .plant-sprite { width: 52px; height: 52px; }
+}
+
+@media (min-width: 1200px) {
+  .plants-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}

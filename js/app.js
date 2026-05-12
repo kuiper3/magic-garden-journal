@@ -1,12 +1,11 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/app.js
-// v0.1.0 — router skeleton; auth wired in 0.2.0
+// v0.4.0 — router + nav render
 // ═══════════════════════════════════════════════
 
 import { initAuth, getSession, signIn, signOut } from './lib/auth.js';
 
 // ── Route map ────────────────────────────────
-// Each value is a dynamic import returning { render, init, destroy }
 const ROUTES = {
   '/plants': () => import('./pages/plants.js'),
   '/pets':   () => import('./pages/pets.js'),
@@ -14,40 +13,62 @@ const ROUTES = {
 
 const DEFAULT_ROUTE = '/plants';
 
-// ── State ────────────────────────────────────
+// ── State ─────────────────────────────────────
 let currentPage = null;
 
-// ── Page lifecycle ───────────────────────────
+// ── Nav ───────────────────────────────────────
+function renderNav() {
+  const navEl = document.getElementById('nav');
+  if (!navEl) return;
+  navEl.innerHTML = `
+    <div class="nav-logo">Journal</div>
+    <a class="nav-link" data-route="/plants" href="/plants">
+      <span class="nav-icon">🌱</span> Plants
+    </a>
+    <a class="nav-link" data-route="/pets" href="/pets">
+      <span class="nav-icon">🐾</span> Pets
+    </a>
+    <div class="nav-spacer"></div>
+    <button class="nav-signout" id="signout-btn">Sign out</button>
+  `;
+
+  document.getElementById('signout-btn')?.addEventListener('click', async () => {
+    await signOut();
+  });
+}
+
+function setActiveNav(path) {
+  document.querySelectorAll('[data-route]').forEach(el => {
+    el.classList.toggle('active', el.dataset.route === path);
+  });
+}
+
+// ── Page lifecycle ─────────────────────────────
 async function navigate(path) {
   const mainEl = document.getElementById('main');
   if (!mainEl) return;
 
-  // Normalise path
   const route = ROUTES[path] ? path : DEFAULT_ROUTE;
 
-  // Tear down current page
   if (currentPage?.destroy) currentPage.destroy();
   currentPage = null;
   mainEl.innerHTML = '';
 
-  // Load + mount new page
   try {
     const mod = await ROUTES[route]();
     currentPage = mod;
     mod.render(mainEl);
-    if (mod.init) mod.init();
+    if (mod.init) await mod.init();
   } catch (err) {
     console.error('[app] Failed to load page:', route, err);
-    mainEl.innerHTML = '<p class="page-error">Failed to load page. Try refreshing.</p>';
+    mainEl.innerHTML = '<p style="color:rgba(255,255,255,0.4);padding:2rem;">Failed to load page. Try refreshing.</p>';
   }
 
-  // Update active nav link
-  document.querySelectorAll('[data-route]').forEach(el => {
-    el.classList.toggle('active', el.dataset.route === route);
-  });
+  setActiveNav(route);
+  window.history.replaceState({}, '', route);
 }
 
-// ── Auth UI helpers ──────────────────────────
+// ── Auth UI ───────────────────────────────────
 function showAuthGate() {
   document.getElementById('auth-gate')?.classList.remove('hidden');
   document.getElementById('app')?.classList.add('hidden');
@@ -60,14 +81,13 @@ function showApp() {
   document.body.classList.add('app-active');
 }
 
-// ── Sign-in form ─────────────────────────────
+// ── Sign-in form ──────────────────────────────
 function bindSignInForm() {
-  const form   = document.getElementById('signin-form');
-  const btn    = document.getElementById('signin-btn');
-  const errEl  = document.getElementById('auth-error');
-  const label  = btn?.querySelector('.btn-label');
+  const form    = document.getElementById('signin-form');
+  const btn     = document.getElementById('signin-btn');
+  const errEl   = document.getElementById('auth-error');
+  const label   = btn?.querySelector('.btn-label');
   const spinner = btn?.querySelector('.btn-spinner');
-
   if (!form) return;
 
   form.addEventListener('submit', async (e) => {
@@ -78,18 +98,14 @@ function bindSignInForm() {
     const password = document.getElementById('password')?.value;
     if (!email || !password) return;
 
-    // Loading state
     btn.disabled = true;
     label?.classList.add('hidden');
     spinner?.classList.remove('hidden');
     errEl?.classList.add('hidden');
 
     try {
-      // 0.2.0: signIn() will call supabase.auth.signInWithPassword
       await signIn(email, password);
-      // On success, the auth state listener in initAuth() will call showApp()
     } catch (err) {
-      console.error('[app] Sign-in error:', err);
       if (errEl) {
         errEl.textContent = err.message || 'Sign-in failed. Check your credentials.';
         errEl.classList.remove('hidden');
@@ -102,15 +118,13 @@ function bindSignInForm() {
   });
 }
 
-// ── Nav links ────────────────────────────────
+// ── Nav link clicks ───────────────────────────
 function bindNav() {
   document.getElementById('nav')?.addEventListener('click', (e) => {
     const link = e.target.closest('[data-route]');
     if (!link) return;
     e.preventDefault();
-    const path = link.dataset.route;
-    window.history.pushState({}, '', path);
-    navigate(path);
+    navigate(link.dataset.route);
   });
 
   window.addEventListener('popstate', () => {
@@ -118,16 +132,14 @@ function bindNav() {
   });
 }
 
-// ── Bootstrap ────────────────────────────────
+// ── Bootstrap ─────────────────────────────────
 async function boot() {
   bindSignInForm();
-  bindNav();
 
-  // 0.2.0: initAuth() sets up supabase.auth.onAuthStateChange
-  // and resolves to the current session (or null).
-  // For 0.1.0 it's a stub that always returns null.
   await initAuth({
     onSignedIn: () => {
+      renderNav();
+      bindNav();
       showApp();
       navigate(window.location.pathname || DEFAULT_ROUTE);
     },
@@ -136,9 +148,10 @@ async function boot() {
     },
   });
 
-  // 0.1.0: no session exists → always show auth gate
   const session = await getSession();
   if (session) {
+    renderNav();
+    bindNav();
     showApp();
     navigate(window.location.pathname || DEFAULT_ROUTE);
   } else {
