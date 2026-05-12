@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/lib/aries.js
-// v0.5.1 — normalized key matching + sort helpers
+// v0.5.2 — exact API keys in CROP_ORDER
 // ═══════════════════════════════════════════════
 
 import { get as cacheGet, clearAll as cacheClearAll } from './cache.js';
@@ -21,37 +21,28 @@ export const PET_VARIANTS = [
   'MaxWeight',
 ];
 
-// ── Canonical in-game journal order ──────────
+// ── Canonical crop order ──────────────────────
+// Keys are exact AriesMod API object keys (verified from live API).
+// Display names come from crop.name in the API response, not these keys.
 
 export const CROP_ORDER = [
   'Carrot', 'Cabbage', 'Strawberry', 'Aloe',
-  'Clover', 'Four-Leaf Clover', 'Beet', 'Rose',
-  'Fava Bean', 'Delphinium', 'Blueberry', 'Apple',
-  'Tulip', 'Tomato', 'Daisy', 'Purple Daisy',
+  'Clover', 'FourLeafClover', 'Beet', 'Rose',
+  'FavaBean', 'Delphinium', 'Blueberry', 'Apple',
+  'OrangeTulip', 'Tomato', 'Daisy', 'PurpleDaisy',
   'Daffodil', 'Corn', 'Watermelon', 'Pumpkin',
   'Echeveria', 'Pear', 'Gentian', 'Lavender',
-  'Coconut', 'Pine Tree', 'Banana', 'Lily',
-  'Camellia', 'Squash', 'Peach', "Burro's Tail",
+  'Coconut', 'PineTree', 'Banana', 'Lily',
+  'Camellia', 'Squash', 'Peach', 'BurrosTail',
   'Saffron', 'Mushroom', 'Cactus', 'Bamboo',
-  'Poinsettia', 'Violet Cort', 'Chrysanthemum', 'Date',
+  'Poinsettia', 'VioletCort', 'Chrysanthemum', 'Date',
   'Grape', 'Eggplant', 'Pepper', 'Lemon',
-  'Passion Fruit', 'Dragon Fruit', 'Cacao', 'Lychee',
+  'PassionFruit', 'DragonFruit', 'Cacao', 'Lychee',
   'Ube', 'Sunflower', 'Dawnbreaker', 'Starweaver',
-  'Dawnbinder', 'Moonbinder',
+  'DawnCelestial', 'MoonCelestial',
 ];
 
-/**
- * Normalise a crop key for fuzzy matching.
- * Strips spaces, hyphens, apostrophes, lowercases everything.
- * "Four-Leaf Clover" → "fourleafclover"
- * "Burro's Tail"    → "burrostail"
- */
-export function normKey(k) {
-  return k.toLowerCase().replace(/[\s\-']/g, '');
-}
-
-// Precompute normalised → position map
-const _normOrderIndex = new Map(CROP_ORDER.map((k, i) => [normKey(k), i]));
+const _cropOrderIndex = new Map(CROP_ORDER.map((k, i) => [k, i]));
 
 // ── API config ────────────────────────────────
 
@@ -86,33 +77,32 @@ export async function refreshAll() {
 // ── Sort modes ────────────────────────────────
 
 export const PLANT_SORT_MODES = {
-  JOURNAL:  'journal',   // in-game Garden Journal order (default)
-  PRICE:    'price',     // seed coin price ascending
-  AZ:       'az',        // alphabetical A→Z
+  JOURNAL: 'journal',
+  PRICE:   'price',
+  AZ:      'az',
 };
 
 /**
- * Plants as a sorted array.
- * @param {string} mode — one of PLANT_SORT_MODES values
+ * Plants sorted by the chosen mode.
+ * JOURNAL uses CROP_ORDER (exact API keys). Unknown crops append at end.
  */
 export async function getPlantsSorted(mode = PLANT_SORT_MODES.JOURNAL) {
-  const data = await fetchPlants();
+  const data   = await fetchPlants();
   const plants = Object.entries(data).map(([key, val]) => ({ key, ...val }));
 
   if (mode === PLANT_SORT_MODES.PRICE) {
     return plants.sort((a, b) =>
       (a.seed?.coinPrice ?? 0) - (b.seed?.coinPrice ?? 0));
   }
-
   if (mode === PLANT_SORT_MODES.AZ) {
-    return plants.sort((a, b) => a.key.localeCompare(b.key));
+    return plants.sort((a, b) =>
+      (a.crop?.name ?? a.key).localeCompare(b.crop?.name ?? b.key));
   }
 
-  // Default: journal order — use normalised key so API casing/punctuation
-  // differences don't break the ordering.
+  // Journal order — exact key match
   return plants.sort((a, b) => {
-    const ai = _normOrderIndex.get(normKey(a.key)) ?? 9999;
-    const bi = _normOrderIndex.get(normKey(b.key)) ?? 9999;
+    const ai = _cropOrderIndex.has(a.key) ? _cropOrderIndex.get(a.key) : 9999;
+    const bi = _cropOrderIndex.has(b.key) ? _cropOrderIndex.get(b.key) : 9999;
     if (ai !== bi) return ai - bi;
     return a.key.localeCompare(b.key);
   });
