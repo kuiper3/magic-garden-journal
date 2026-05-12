@@ -349,3 +349,42 @@
   .modal-card { max-height: 90dvh; }
   .variant-img-wrap { width: 40px; height: 40px; }
 }
+
+/* ── Page header row (title + sort toggle) ─── */
+.page-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ── Sort toggle ────────────────────────────── */
+.sort-toggle {
+  display: flex;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sort-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.35);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+
+.sort-btn:hover { color: rgba(255,255,255,0.65); background: rgba(255,255,255,0.04); }
+
+.sort-btn.active {
+  color: var(--green-light);
+  background: rgba(90,154,110,0.15);
+}

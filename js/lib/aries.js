@@ -1,13 +1,12 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/lib/aries.js
-// v0.5.0 — variant constants, order, API client
+// v0.5.1 — normalized key matching + sort helpers
 // ═══════════════════════════════════════════════
 
 import { get as cacheGet, clearAll as cacheClearAll } from './cache.js';
 
 // ── Variant constants ─────────────────────────
 
-/** 12 variants tracked per crop in the Garden Journal. */
 export const CROP_VARIANTS = [
   'Normal',
   'Wet', 'Chilled', 'Frozen', 'Thunderstruck',
@@ -16,14 +15,13 @@ export const CROP_VARIANTS = [
   'MaxWeight',
 ];
 
-/** 4 variants tracked per pet in the Garden Journal. */
 export const PET_VARIANTS = [
   'Normal',
   'Gold', 'Rainbow',
   'MaxWeight',
 ];
 
-// ── Canonical crop order (matches in-game journal) ──
+// ── Canonical in-game journal order ──────────
 
 export const CROP_ORDER = [
   'Carrot', 'Cabbage', 'Strawberry', 'Aloe',
@@ -42,8 +40,18 @@ export const CROP_ORDER = [
   'Dawnbinder', 'Moonbinder',
 ];
 
-// Fast lookup: key → index position
-const _cropOrderIndex = new Map(CROP_ORDER.map((k, i) => [k, i]));
+/**
+ * Normalise a crop key for fuzzy matching.
+ * Strips spaces, hyphens, apostrophes, lowercases everything.
+ * "Four-Leaf Clover" → "fourleafclover"
+ * "Burro's Tail"    → "burrostail"
+ */
+export function normKey(k) {
+  return k.toLowerCase().replace(/[\s\-']/g, '');
+}
+
+// Precompute normalised → position map
+const _normOrderIndex = new Map(CROP_ORDER.map((k, i) => [normKey(k), i]));
 
 // ── API config ────────────────────────────────
 
@@ -56,57 +64,65 @@ async function apiFetch(path) {
   return res.json();
 }
 
-// ── Raw fetchers (cached) ─────────────────────
+// ── Raw fetchers ──────────────────────────────
 
 export function fetchPlants() {
   return cacheGet('aries:plants', TTL_1H, () => apiFetch('/data/plants'));
 }
-
 export function fetchPets() {
   return cacheGet('aries:pets', TTL_1H, () => apiFetch('/data/pets'));
 }
-
-/** Mutation definitions — mainly used for variant sprites. */
 export function fetchMutations() {
   return cacheGet('aries:mutations', TTL_1H, () => apiFetch('/data/mutations'));
 }
-
-/** Egg definitions — faunaSpawnWeights used for pet sort order. */
 export function fetchEggs() {
   return cacheGet('aries:eggs', TTL_1H, () => apiFetch('/data/eggs'));
 }
-
 export async function refreshAll() {
   cacheClearAll();
   await Promise.all([fetchPlants(), fetchPets(), fetchMutations(), fetchEggs()]);
 }
 
-// ── Sorted helpers ────────────────────────────
+// ── Sort modes ────────────────────────────────
+
+export const PLANT_SORT_MODES = {
+  JOURNAL:  'journal',   // in-game Garden Journal order (default)
+  PRICE:    'price',     // seed coin price ascending
+  AZ:       'az',        // alphabetical A→Z
+};
 
 /**
- * Plants sorted in canonical in-game Garden Journal order.
- * Any API crop not in CROP_ORDER is appended alphabetically at the end.
- * Shape: [{ key, seed, plant, crop }, ...]
+ * Plants as a sorted array.
+ * @param {string} mode — one of PLANT_SORT_MODES values
  */
-export async function getPlantsSorted() {
+export async function getPlantsSorted(mode = PLANT_SORT_MODES.JOURNAL) {
   const data = await fetchPlants();
-  return Object.entries(data)
-    .map(([key, val]) => ({ key, ...val }))
-    .sort((a, b) => {
-      const ai = _cropOrderIndex.has(a.key) ? _cropOrderIndex.get(a.key) : 9999;
-      const bi = _cropOrderIndex.has(b.key) ? _cropOrderIndex.get(b.key) : 9999;
-      if (ai !== bi) return ai - bi;
-      return a.key.localeCompare(b.key); // alphabetical tiebreak for unknowns
-    });
+  const plants = Object.entries(data).map(([key, val]) => ({ key, ...val }));
+
+  if (mode === PLANT_SORT_MODES.PRICE) {
+    return plants.sort((a, b) =>
+      (a.seed?.coinPrice ?? 0) - (b.seed?.coinPrice ?? 0));
+  }
+
+  if (mode === PLANT_SORT_MODES.AZ) {
+    return plants.sort((a, b) => a.key.localeCompare(b.key));
+  }
+
+  // Default: journal order — use normalised key so API casing/punctuation
+  // differences don't break the ordering.
+  return plants.sort((a, b) => {
+    const ai = _normOrderIndex.get(normKey(a.key)) ?? 9999;
+    const bi = _normOrderIndex.get(normKey(b.key)) ?? 9999;
+    if (ai !== bi) return ai - bi;
+    return a.key.localeCompare(b.key);
+  });
 }
 
 /**
- * Pets sorted by cheapest source egg (most accessible first).
- * Shape: [{ key, sprite, eggName, eggPrice, ...rest }, ...]
+ * Pets sorted by cheapest source egg.
  */
 export async function getPetsSorted() {
   const [petsData, eggsData] = await Promise.all([fetchPets(), fetchEggs()]);
-
   const petEggMap = {};
   for (const [eggName, egg] of Object.entries(eggsData)) {
     for (const petName of Object.keys(egg.faunaSpawnWeights ?? {})) {
@@ -115,7 +131,6 @@ export async function getPetsSorted() {
       }
     }
   }
-
   return Object.entries(petsData)
     .map(([key, val]) => ({
       key, ...val,

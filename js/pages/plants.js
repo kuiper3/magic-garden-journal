@@ -1,17 +1,21 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/pages/plants.js
-// v0.5.0 — variant drill-down + Supabase toggle
+// v0.5.1 — sort toggle + variant modal
 // ═══════════════════════════════════════════════
 
-import { getPlantsSorted, fetchMutations, CROP_VARIANTS } from '../lib/aries.js';
+import {
+  getPlantsSorted, fetchMutations,
+  CROP_VARIANTS, PLANT_SORT_MODES,
+} from '../lib/aries.js';
 import { getSupabase } from '../lib/supabase.js';
 
 // ── Module state ──────────────────────────────
 let _container   = null;
-let _plants      = [];       // [{ key, seed, plant, crop }, ...]
-let _mutations   = {};       // { [mutationName]: { sprite, ... } }
-let _discovered  = new Map();// Map<plantKey, Set<variantKey>>
+let _plants      = [];
+let _mutations   = {};
+let _discovered  = new Map();
 let _currentUser = null;
+let _sortMode    = PLANT_SORT_MODES.JOURNAL;
 
 // ── Page interface ────────────────────────────
 
@@ -20,8 +24,17 @@ export function render(container) {
   container.innerHTML = `
     <link rel="stylesheet" href="css/plants.css">
     <div class="page-header">
-      <h2 class="page-title">Plants</h2>
-      <p class="page-subtitle">Track your discovered crop variants · ${CROP_VARIANTS.length} variants per crop</p>
+      <div class="page-header-row">
+        <div>
+          <h2 class="page-title">Plants</h2>
+          <p class="page-subtitle">${CROP_VARIANTS.length} variants per crop</p>
+        </div>
+        <div class="sort-toggle" id="sort-toggle">
+          <button class="sort-btn active" data-sort="journal" title="In-game Journal order">Journal</button>
+          <button class="sort-btn" data-sort="price"   title="Sort by seed price">Price</button>
+          <button class="sort-btn" data-sort="az"      title="Sort A → Z">A–Z</button>
+        </div>
+      </div>
     </div>
     <div id="plants-content">
       <div class="state-loading"><div class="spinner"></div><span>Loading plants…</span></div>
@@ -31,8 +44,8 @@ export function render(container) {
 export async function init() {
   try {
     await loadPlants();
-    document.getElementById('plants-content')
-      ?.addEventListener('click', onCardClick);
+    document.getElementById('plants-content')?.addEventListener('click', onCardClick);
+    document.getElementById('sort-toggle')?.addEventListener('click', onSortClick);
   } catch (err) {
     console.error('[plants]', err);
     showError(err.message);
@@ -45,6 +58,26 @@ export function destroy() {
   _plants = []; _mutations = {}; _discovered = new Map(); _currentUser = null;
 }
 
+// ── Sort toggle ───────────────────────────────
+
+async function onSortClick(e) {
+  const btn = e.target.closest('.sort-btn');
+  if (!btn) return;
+  const mode = btn.dataset.sort;
+  if (mode === _sortMode) return;
+
+  _sortMode = mode;
+  document.querySelectorAll('.sort-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.sort === mode));
+
+  const content = document.getElementById('plants-content');
+  if (content) content.innerHTML =
+    `<div class="state-loading"><div class="spinner"></div><span>Sorting…</span></div>`;
+
+  _plants = await getPlantsSorted(_sortMode);
+  renderGrid();
+}
+
 // ── Data loading ──────────────────────────────
 
 async function loadPlants() {
@@ -53,12 +86,12 @@ async function loadPlants() {
   _currentUser = user;
 
   const [plants, mutations, entries] = await Promise.all([
-    getPlantsSorted(),
+    getPlantsSorted(_sortMode),
     fetchMutations(),
     fetchJournalEntries(supabase, user),
   ]);
 
-  _plants   = plants;
+  _plants    = plants;
   _mutations = mutations;
   _discovered = buildDiscoveredMap(entries);
   renderGrid();
@@ -82,7 +115,7 @@ function buildDiscoveredMap(entries) {
   return map;
 }
 
-// ── Grid rendering ────────────────────────────
+// ── Grid ──────────────────────────────────────
 
 function renderGrid() {
   const content = document.getElementById('plants-content');
@@ -96,13 +129,13 @@ function renderGrid() {
 
 function buildCard(plant) {
   const { key } = plant;
-  const name    = plant.crop?.name ?? key;
-  const sprite  = plant.crop?.sprite ?? plant.seed?.sprite ?? null;
-  const disc    = _discovered.get(key)?.size ?? 0;
-  const total   = CROP_VARIANTS.length;
-  const pct     = Math.round((disc / total) * 100);
-  const done    = disc >= total;
-  const buy     = plant.seed?.purchasable === true;
+  const name   = plant.crop?.name ?? key;
+  const sprite = plant.crop?.sprite ?? plant.seed?.sprite ?? null;
+  const disc   = _discovered.get(key)?.size ?? 0;
+  const total  = CROP_VARIANTS.length;
+  const pct    = Math.round((disc / total) * 100);
+  const done   = disc >= total;
+  const buy    = plant.seed?.purchasable === true;
 
   const img = sprite
     ? `<img class="plant-sprite" src="${sprite}" alt="${name}" loading="lazy"
@@ -110,7 +143,7 @@ function buildCard(plant) {
     : `<div class="plant-sprite-missing">🌿</div>`;
 
   return `
-    <div class="plant-card${buy ? ' purchasable' : ''}" data-plant-key="${key}" title="${name}">
+    <div class="plant-card${buy ? ' purchasable' : ''}" data-plant-key="${key}">
       ${img}
       <span class="plant-name">${name}</span>
       <div class="plant-progress">
@@ -126,11 +159,10 @@ function refreshCard(plantKey) {
   const card = document.querySelector(`[data-plant-key="${plantKey}"]`);
   if (!card) return;
   const plant = _plants.find(p => p.key === plantKey);
-  if (!plant) return;
-  card.outerHTML = buildCard(plant);
+  if (plant) card.outerHTML = buildCard(plant);
 }
 
-// ── Card click → open modal ───────────────────
+// ── Modal ─────────────────────────────────────
 
 function onCardClick(e) {
   const card = e.target.closest('[data-plant-key]');
@@ -139,29 +171,25 @@ function onCardClick(e) {
   if (plant) openModal(plant);
 }
 
-// ── Modal ─────────────────────────────────────
-
 function openModal(plant) {
   closeModal();
-
   const key    = plant.key;
   const name   = plant.crop?.name ?? key;
   const sprite = plant.crop?.sprite ?? plant.seed?.sprite ?? null;
   const disc   = _discovered.get(key) ?? new Set();
 
-  const variantTiles = CROP_VARIANTS.map(variant => {
-    const isDisc   = disc.has(variant);
+  const tiles = CROP_VARIANTS.map(variant => {
+    const isDisc    = disc.has(variant);
     const varSprite = getVariantSprite(variant, sprite);
     return `
       <div class="variant-tile${isDisc ? ' discovered' : ''}"
-           data-variant="${variant}" data-plant-key="${key}"
-           title="${variant}${isDisc ? ' — discovered' : ' — not yet discovered'}">
+           data-variant="${variant}" data-plant-key="${key}">
         <div class="variant-img-wrap">
           ${varSprite
             ? `<img src="${varSprite}" alt="${variant}" loading="lazy"
                    onerror="this.style.display='none'">`
             : `<span class="variant-emoji">${variantEmoji(variant)}</span>`}
-          ${isDisc ? `<span class="variant-check" aria-hidden="true">✓</span>` : ''}
+          ${isDisc ? `<span class="variant-check">✓</span>` : ''}
         </div>
         <span class="variant-name">${variant}</span>
       </div>`;
@@ -171,7 +199,7 @@ function openModal(plant) {
   overlay.id = 'plant-modal';
   overlay.className = 'modal-overlay';
   overlay.innerHTML = `
-    <div class="modal-card" role="dialog" aria-modal="true" aria-label="${name} variants">
+    <div class="modal-card" role="dialog" aria-modal="true">
       <div class="modal-header">
         ${sprite ? `<img class="modal-crop-sprite" src="${sprite}" alt="${name}">` : ''}
         <div class="modal-crop-info">
@@ -182,7 +210,7 @@ function openModal(plant) {
         </div>
         <button class="modal-close" aria-label="Close">✕</button>
       </div>
-      <div class="modal-variants-grid" id="modal-variants">${variantTiles}</div>
+      <div class="modal-variants-grid">${tiles}</div>
     </div>`;
 
   overlay.addEventListener('click', onModalClick);
@@ -192,60 +220,48 @@ function openModal(plant) {
 }
 
 function closeModal() {
-  const existing = document.getElementById('plant-modal');
-  if (existing) existing.remove();
+  document.getElementById('plant-modal')?.remove();
   document.removeEventListener('keydown', onModalKeydown);
 }
 
-function onModalKeydown(e) {
-  if (e.key === 'Escape') closeModal();
-}
+function onModalKeydown(e) { if (e.key === 'Escape') closeModal(); }
 
 async function onModalClick(e) {
-  // Close button or backdrop click
-  if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('modal-close')) {
-    closeModal(); return;
-  }
+  if (e.target.classList.contains('modal-overlay') ||
+      e.target.classList.contains('modal-close')) { closeModal(); return; }
 
-  // Variant tile toggle
   const tile = e.target.closest('.variant-tile');
   if (!tile) return;
 
-  const plantKey  = tile.dataset.plantKey;
+  const plantKey   = tile.dataset.plantKey;
   const variantKey = tile.dataset.variant;
-  const wasDisc   = tile.classList.contains('discovered');
+  const wasDisc    = tile.classList.contains('discovered');
 
   // Optimistic update
   tile.classList.toggle('discovered', !wasDisc);
   if (!wasDisc) {
-    tile.querySelector('.variant-img-wrap').insertAdjacentHTML(
-      'beforeend', `<span class="variant-check" aria-hidden="true">✓</span>`);
+    tile.querySelector('.variant-img-wrap')
+        .insertAdjacentHTML('beforeend', `<span class="variant-check">✓</span>`);
   } else {
     tile.querySelector('.variant-check')?.remove();
   }
 
-  // Update local state
   if (!_discovered.has(plantKey)) _discovered.set(plantKey, new Set());
   const set = _discovered.get(plantKey);
   wasDisc ? set.delete(variantKey) : set.add(variantKey);
 
-  // Update progress text in modal header
-  const progText = document.getElementById('modal-progress-text');
-  if (progText) progText.textContent = `${set.size} / ${CROP_VARIANTS.length} variants discovered`;
-
-  // Refresh the card in the background grid
+  const prog = document.getElementById('modal-progress-text');
+  if (prog) prog.textContent = `${set.size} / ${CROP_VARIANTS.length} variants discovered`;
   refreshCard(plantKey);
 
-  // Persist to Supabase
   try {
     await persistToggle(plantKey, variantKey, wasDisc);
   } catch (err) {
     console.error('[plants] toggle failed, reverting:', err);
-    // Revert optimistic update
     tile.classList.toggle('discovered', wasDisc);
     if (wasDisc) {
-      tile.querySelector('.variant-img-wrap').insertAdjacentHTML(
-        'beforeend', `<span class="variant-check" aria-hidden="true">✓</span>`);
+      tile.querySelector('.variant-img-wrap')
+          .insertAdjacentHTML('beforeend', `<span class="variant-check">✓</span>`);
     } else {
       tile.querySelector('.variant-check')?.remove();
     }
@@ -270,7 +286,7 @@ async function persistToggle(plantKey, variantKey, wasDiscovered) {
   }
 }
 
-// ── Variant sprite helpers ────────────────────
+// ── Helpers ───────────────────────────────────
 
 function getVariantSprite(variant, cropSprite) {
   if (variant === 'Normal' || variant === 'MaxWeight') return cropSprite;
@@ -285,8 +301,6 @@ function variantEmoji(variant) {
   };
   return map[variant] ?? '🌿';
 }
-
-// ── Error state ───────────────────────────────
 
 function showError(msg) {
   const content = document.getElementById('plants-content');
