@@ -155,3 +155,41 @@
   .overall-bar-track { width: 70px; }
   .row-stats { display: none; }
 }
+
+/* ── v0.6.1 additions ───────────────────────── */
+
+/* Card top badges */
+.card-top-badges {
+  position: absolute; top: 5px; left: 6px;
+  display: flex; gap: 3px; align-items: center;
+}
+.acq-tag { font-size: 0.7rem; line-height: 1; cursor: default; }
+
+/* Seed price on card */
+.card-seed-price {
+  font-size: 0.68rem; color: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.04);
+  border-radius: 999px; padding: 0.1rem 0.45rem;
+}
+
+/* Progress with % */
+.progress-label {
+  font-size: 0.65rem; color: rgba(255,255,255,0.3);
+  text-align: center; display: flex; justify-content: center; align-items: center; gap: 0.2rem;
+}
+.progress-pct { color: rgba(255,255,255,0.5); font-weight: 500; }
+.progress-pct.done { color: var(--gold-light); }
+
+/* Harvest badge */
+.harvest-badge { font-size: 0.6rem; padding: 0.1rem 0.3rem; border-radius: 3px; }
+.harvest-badge.multi  { background: rgba(90,154,110,0.2); color: var(--green-light); }
+.harvest-badge.single { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); }
+
+/* List row acquisition text */
+.row-acq-text {
+  font-size: 0.66rem; color: rgba(255,255,255,0.3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-top: 1px;
+}
+.row-pct { font-size: 0.62rem; color: rgba(255,255,255,0.35); }
+.row-disc.done .row-pct { color: var(--gold-light); }

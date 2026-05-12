@@ -21,7 +21,7 @@ function renderNav() {
   const navEl = document.getElementById('nav');
   if (!navEl) return;
   navEl.innerHTML = `
-    <div class="nav-logo">Journal</div>
+    <div class="nav-logo">Journal<span class="nav-version">v0.6.1</span></div>
     <a class="nav-link" data-route="/plants" href="/plants">
       <span class="nav-icon">🌱</span> Plants
     </a>
