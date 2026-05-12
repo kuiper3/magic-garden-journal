@@ -1,71 +1,46 @@
 /* ═══════════════════════════════════════════════
-   Magic Garden Journal — main.css
-   v0.1.0
+   Magic Garden Journal — main.css  v0.2.0
    ═══════════════════════════════════════════════ */
 
 /* ── Variables ──────────────────────────────── */
 :root {
-  /* Background */
   --bg:           #0c1a0e;
   --bg-2:         #13261a;
   --bg-3:         #1a3324;
-
-  /* Card / surface */
   --surface:      #f4edda;
   --surface-2:    #ece2c4;
   --surface-border: #cdbf97;
-
-  /* Text */
   --text:         #261c0a;
   --text-2:       #5a4a2e;
   --text-muted:   #8a7a5e;
-
-  /* Accent — forest green */
   --green:        #3d6e4f;
   --green-light:  #5a9a6e;
   --green-glow:   rgba(61, 110, 79, 0.35);
-
-  /* Accent — amber gold */
   --gold:         #b8892a;
   --gold-light:   #d4a853;
-
-  /* UI */
   --input-bg:     #fdf8ee;
   --input-border: #c8b88a;
   --input-focus:  #3d6e4f;
   --error:        #c0392b;
-
-  /* Shadows */
   --shadow-card:  0 32px 80px rgba(0,0,0,0.6), 0 8px 24px rgba(0,0,0,0.35);
   --shadow-btn:   0 4px 16px rgba(61,110,79,0.4);
-
-  /* Radii */
   --radius:       14px;
   --radius-sm:    8px;
   --radius-xs:    4px;
-
-  /* Type */
   --font-display: 'Playfair Display', Georgia, serif;
   --font-body:    'DM Sans', system-ui, sans-serif;
-
-  /* Transitions */
   --ease:         cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ── Reset ──────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html {
-  font-size: 16px;
-  -webkit-text-size-adjust: 100%;
-}
-
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
 body {
   font-family: var(--font-body);
   background: var(--bg);
   color: var(--text);
   min-height: 100dvh;
-  overflow: hidden; /* auth gate only; removed once app mounts */
+  overflow: hidden;
 }
 
 /* ── Canvas background ──────────────────────── */
@@ -105,7 +80,6 @@ body {
   animation: slideUp 0.7s var(--ease) 0.1s both;
 }
 
-/* Faint inner gradient for parchment depth */
 .auth-card::before {
   content: '';
   position: absolute;
@@ -116,10 +90,7 @@ body {
 }
 
 /* ── Auth header ────────────────────────────── */
-.auth-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
+.auth-header { text-align: center; margin-bottom: 2rem; }
 
 .auth-emblem {
   font-size: 2.8rem;
@@ -136,11 +107,7 @@ body {
   line-height: 1.2;
   letter-spacing: -0.01em;
 }
-
-.auth-title em {
-  font-style: italic;
-  color: var(--green);
-}
+.auth-title em { font-style: italic; color: var(--green); }
 
 .auth-subtitle {
   font-size: 0.8rem;
@@ -152,17 +119,9 @@ body {
 }
 
 /* ── Auth form ──────────────────────────────── */
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-}
+.auth-form { display: flex; flex-direction: column; gap: 1.1rem; }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
+.field { display: flex; flex-direction: column; gap: 0.35rem; }
 
 .field label {
   font-size: 0.78rem;
@@ -171,6 +130,7 @@ body {
   letter-spacing: 0.03em;
 }
 
+/* Base input style (email field uses this directly) */
 .field input {
   background: var(--input-bg);
   border: 1.5px solid var(--input-border);
@@ -183,12 +143,45 @@ body {
   outline: none;
   width: 100%;
 }
-
 .field input::placeholder { color: var(--text-muted); opacity: 0.7; }
-
 .field input:focus {
   border-color: var(--input-focus);
   box-shadow: 0 0 0 3px var(--green-glow);
+}
+
+/* ── Password field — icon lives INSIDE the box  */
+.field-password-wrap {
+  position: relative; /* anchor for the absolute button */
+}
+
+/* Give the password input extra right padding so text
+   never slides under the eye icon */
+.field-password-wrap input {
+  padding-right: 2.8rem;
+}
+
+.btn-show-pw {
+  position: absolute;
+  top: 50%;
+  right: 0.7rem;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+  transition: color 0.15s;
+  line-height: 0;
+  z-index: 1;
+}
+.btn-show-pw:hover       { color: var(--green); }
+.btn-show-pw:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
 }
 
 /* ── Error message ──────────────────────────── */
@@ -215,22 +208,18 @@ body {
   margin-top: 0.4rem;
   transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
   box-shadow: var(--shadow-btn);
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-height: 44px; /* accessibility touch target */
+  min-height: 44px;
 }
-
-.btn-signin:hover  { background: var(--green-light); box-shadow: 0 6px 20px rgba(61,110,79,0.5); }
-.btn-signin:active { transform: translateY(1px); }
+.btn-signin:hover    { background: var(--green-light); box-shadow: 0 6px 20px rgba(61,110,79,0.5); }
+.btn-signin:active   { transform: translateY(1px); }
 .btn-signin:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
 
-/* Loading spinner inside button */
 .btn-spinner {
-  width: 16px;
-  height: 16px;
+  width: 16px; height: 16px;
   border: 2px solid rgba(255,255,255,0.3);
   border-top-color: #fff;
   border-radius: 50%;
@@ -248,11 +237,7 @@ body {
 }
 
 /* ── App shell ──────────────────────────────── */
-.app {
-  display: flex;
-  min-height: 100dvh;
-}
-
+.app { display: flex; min-height: 100dvh; }
 body.app-active { overflow: auto; }
 
 /* ── Animations ─────────────────────────────── */
@@ -260,46 +245,12 @@ body.app-active { overflow: auto; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes spin    { to { transform: rotate(360deg); } }
 @keyframes gentlePulse {
-  0%, 100% { transform: scale(1);    filter: none; }
-  50%      { transform: scale(1.06); filter: drop-shadow(0 0 8px rgba(140,200,100,0.4)); }
+  0%, 100% { transform: scale(1); filter: none; }
+  50%       { transform: scale(1.06); filter: drop-shadow(0 0 8px rgba(140,200,100,0.4)); }
 }
 
 /* ── Responsive ─────────────────────────────── */
 @media (max-width: 480px) {
-  .auth-card { padding: 2rem 1.5rem 1.5rem; }
+  .auth-card  { padding: 2rem 1.5rem 1.5rem; }
   .auth-title { font-size: 1.65rem; }
-}
-
-/* ── Password field with show/hide toggle ───── */
-.field-password-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.field-password-wrap input {
-  width: 100%;
-  padding-right: 2.6rem; /* room for the toggle button */
-}
-
-.btn-show-pw {
-  position: absolute;
-  right: 0.6rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.25rem;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-xs);
-  transition: color 0.15s;
-  line-height: 0;
-}
-
-.btn-show-pw:hover { color: var(--green); }
-.btn-show-pw:focus-visible {
-  outline: 2px solid var(--green);
-  outline-offset: 2px;
 }
