@@ -269,3 +269,37 @@ body.app-active { overflow: auto; }
   .auth-card { padding: 2rem 1.5rem 1.5rem; }
   .auth-title { font-size: 1.65rem; }
 }
+
+/* ── Password field with show/hide toggle ───── */
+.field-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field-password-wrap input {
+  width: 100%;
+  padding-right: 2.6rem; /* room for the toggle button */
+}
+
+.btn-show-pw {
+  position: absolute;
+  right: 0.6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+  transition: color 0.15s;
+  line-height: 0;
+}
+
+.btn-show-pw:hover { color: var(--green); }
+.btn-show-pw:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
