@@ -161,3 +161,191 @@
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
 }
+
+/* ── Modal overlay ──────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 200;
+  opacity: 0;
+  transition: opacity 0.2s var(--ease);
+}
+.modal-overlay.open { opacity: 1; }
+
+/* ── Modal card ─────────────────────────────── */
+.modal-card {
+  background: var(--bg-2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 540px;
+  max-height: 85dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(12px);
+  transition: transform 0.25s var(--ease);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+}
+.modal-overlay.open .modal-card { transform: translateY(0); }
+
+/* ── Modal header ───────────────────────────── */
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  position: sticky;
+  top: 0;
+  background: var(--bg-2);
+  z-index: 1;
+}
+
+.modal-crop-sprite {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.modal-crop-info { flex: 1; min-width: 0; }
+
+.modal-crop-name {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: rgba(255,255,255,0.9);
+  font-weight: 600;
+}
+
+.modal-crop-progress {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.35);
+  margin-top: 0.15rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.3);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-xs);
+  transition: color 0.15s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.modal-close:hover { color: rgba(255,255,255,0.7); }
+
+/* ── Variants grid ──────────────────────────── */
+.modal-variants-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.65rem;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+/* ── Variant tile ───────────────────────────── */
+.variant-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.65rem 0.4rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1.5px dashed rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  background: rgba(255,255,255,0.02);
+  user-select: none;
+}
+
+.variant-tile:hover {
+  border-color: rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.05);
+  transform: translateY(-1px);
+}
+
+.variant-tile.discovered {
+  border: 1.5px solid var(--green-light);
+  background: rgba(90,154,110,0.1);
+}
+
+.variant-tile.discovered:hover {
+  background: rgba(90,154,110,0.16);
+}
+
+/* ── Variant image area ─────────────────────── */
+.variant-img-wrap {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.variant-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+/* Undiscovered tiles — image dimmed */
+.variant-tile:not(.discovered) .variant-img-wrap img {
+  filter: grayscale(1) brightness(0.35);
+}
+
+.variant-emoji { font-size: 1.6rem; line-height: 1; }
+
+/* Undiscovered tiles — emoji dimmed */
+.variant-tile:not(.discovered) .variant-emoji { opacity: 0.2; }
+
+.variant-check {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: var(--green);
+  color: #fff;
+  font-size: 0.6rem;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border: 1.5px solid var(--bg-2);
+}
+
+.variant-name {
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.45);
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.variant-tile.discovered .variant-name {
+  color: rgba(255,255,255,0.75);
+}
+
+/* ── Responsive modal ───────────────────────── */
+@media (max-width: 480px) {
+  .modal-variants-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+  .modal-card { max-height: 90dvh; }
+  .variant-img-wrap { width: 40px; height: 40px; }
+}
