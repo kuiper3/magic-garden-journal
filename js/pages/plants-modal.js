@@ -1,18 +1,33 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/pages/plants-modal.js
-// v0.7.0 — rich modal, composed variant sprites
+// v0.7.0 — Aries-style modal with stages + stats
 // ═══════════════════════════════════════════════
 
 import { CROP_VARIANTS, composedSpriteUrl, isTallPlant, CROP_RARITY } from '../lib/aries.js';
 import {
-  rarityPill, acquisitionBadge, acquisitionText, seedFinderNote,
-  coinPrice, fmtCoinValue, fmtTime,
+  acquisitionBadge, acquisitionText, seedFinderNote, fmtTime,
 } from '../lib/icons.js';
 import { getSupabase } from '../lib/supabase.js';
 
-let _onToggle = null;
+const ARIES_BASE = 'https://mg-api.ariedam.fr';
 
-// ── Open / close ──────────────────────────────
+function rarityIconName(rarity) { return rarity === 'Mythical' ? 'Mythic' : rarity; }
+function rarityIconImg(cropKey) {
+  const r = CROP_RARITY[cropKey] ?? 'Common';
+  return `<img class="modal-rarity-icon" src="${ARIES_BASE}/assets/sprites/ui/Rarity${rarityIconName(r)}.png" alt="${r}" title="${r}">`;
+}
+function coinIconImg() {
+  return `<img class="stat-icon-img" src="${ARIES_BASE}/assets/sprites/ui/Coin.png" alt="coin">`;
+}
+const SELL_SVG = `<svg class="stat-icon-img" width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+  <path d="M2 8l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M6 4v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M9 10h4a1 1 0 011 1v1a1 1 0 01-1 1H9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+  <circle cx="13" cy="11.5" r="0.5" fill="currentColor"/>
+</svg>`;
+const fmtCoin = n => n == null ? '—' : n.toLocaleString();
+
+let _onToggle = null;
 
 export function openModal(plant, _ignored, discovered, user, onToggle) {
   closeModal();
@@ -20,9 +35,11 @@ export function openModal(plant, _ignored, discovered, user, onToggle) {
 
   const key       = plant.key;
   const name      = plant.crop?.name ?? key;
-  const sprite    = plant.crop?.sprite ?? plant.seed?.sprite ?? null;
-  const disc      = discovered.get(key) ?? new Set();
   const rarity    = CROP_RARITY[key] ?? 'Common';
+  const seedImg   = plant.seed?.sprite;
+  const plantImg  = plant.plant?.sprite;
+  const cropImg   = plant.crop?.sprite;
+  const disc      = discovered.get(key) ?? new Set();
   const harvest   = plant.plant?.harvestType ?? null;
   const seedPrice = plant.seed?.coinPrice;
   const sellPrice = plant.crop?.baseSellPrice;
@@ -33,18 +50,29 @@ export function openModal(plant, _ignored, discovered, user, onToggle) {
   const acqText   = acquisitionText(key);
   const sfNote    = seedFinderNote(key);
 
-  // First info line: rarity · harvest · replant note · acquisition (+price)
-  const summaryParts = [
-    `<strong>${rarity}</strong>`,
-    harvest === 'Single' ? 'Single-harvest — replant seed after each harvest'
-      : harvest === 'Multi' ? 'Multi-harvest' : null,
-    buildAcqLine(acqText, seedPrice),
-  ].filter(Boolean);
+  // Acquisition line
+  const sourceLabel = acqText || 'Seed Shop';
+  const sourceLine = seedPrice != null
+    ? `${sourceLabel} <span class="source-price">(${fmtCoin(seedPrice)} coins)</span>`
+    : sourceLabel;
 
-  // Seed Finder note as second line
-  const sfLine = sfNote ? `<div class="modal-sf-line">Pets with <strong>${sfNote}</strong> can find this seed</div>` : '';
+  const harvestLabel = harvest === 'Single'
+    ? 'Single-harvest — replant after each harvest'
+    : harvest === 'Multi' ? 'Multi-harvest' : '';
 
-  // Variant tiles using composed sprite URLs
+  const sfLine = sfNote
+    ? `<div class="modal-sf-line">Pets with <strong>${sfNote}</strong> can find this seed</div>`
+    : '';
+
+  // Stages
+  const stage = (src, label) => src
+    ? `<div class="stage">
+         <img class="stage-img" src="${src}" alt="${label}" loading="lazy">
+         <span class="stage-lbl">${label}</span>
+       </div>`
+    : `<div class="stage"><span class="stage-img stage-missing">·</span><span class="stage-lbl">${label}</span></div>`;
+
+  // Variant tiles via composed sprite endpoint
   const tall = isTallPlant(key);
   const tiles = CROP_VARIANTS.map(variant => {
     const isDisc = disc.has(variant);
@@ -55,8 +83,7 @@ export function openModal(plant, _ignored, discovered, user, onToggle) {
       <div class="variant-tile${isDisc ? ' discovered' : ''}${cls}"
            data-variant="${variant}" data-plant-key="${key}">
         <div class="variant-img-wrap">
-          <img src="${url}" alt="${label}" loading="lazy"
-               onerror="this.style.display='none'">
+          <img src="${url}" alt="${label}" loading="lazy" onerror="this.style.display='none'">
           ${isDisc ? `<span class="variant-check">✓</span>` : ''}
         </div>
         <span class="variant-name">${label}</span>
@@ -71,12 +98,53 @@ export function openModal(plant, _ignored, discovered, user, onToggle) {
   overlay.className = 'modal-overlay';
   overlay.innerHTML = `
     <div class="modal-card" role="dialog" aria-modal="true">
+
       <div class="modal-header">
-        ${sprite ? `<img class="modal-crop-sprite" src="${sprite}" alt="${name}">` : ''}
+        <div class="modal-rarity-wrap">${rarityIconImg(key)}${acquisitionBadge(key)}</div>
         <h3 class="modal-crop-name">${name}</h3>
-        ${rarityPill(key)}
-        ${acquisitionBadge(key)}
         <button class="modal-close" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-stages">
+        ${stage(seedImg, 'Seed')}
+        <span class="stage-arr">→</span>
+        ${stage(plantImg, 'Plant')}
+        <span class="stage-arr">→</span>
+        ${stage(cropImg, 'Crop')}
+      </div>
+
+      <div class="modal-info-block">
+        <div class="modal-rarity-tag rarity-${rarity.toLowerCase()}">${rarity}</div>
+        ${harvestLabel ? `<div class="modal-info-line">${harvestLabel}</div>` : ''}
+        <div class="modal-info-line modal-source-line">${sourceLine}</div>
+        ${sfLine}
+      </div>
+
+      <div class="modal-stats-grid">
+        <div class="stat-cell">
+          <span class="stat-label">SEED</span>
+          <span class="stat-value">${coinIconImg()}${fmtCoin(seedPrice)}</span>
+        </div>
+        <div class="stat-cell">
+          <span class="stat-label">SELL</span>
+          <span class="stat-value sell">${SELL_SVG}${fmtCoin(sellPrice)}</span>
+        </div>
+        <div class="stat-cell">
+          <span class="stat-label">GROW</span>
+          <span class="stat-value">${fmtTime(growT)}</span>
+        </div>
+        <div class="stat-cell">
+          <span class="stat-label">REGROW</span>
+          <span class="stat-value">${regrowT ? fmtTime(regrowT) : '—'}</span>
+        </div>
+        <div class="stat-cell">
+          <span class="stat-label">WEIGHT</span>
+          <span class="stat-value">${baseW != null && maxW != null ? `${baseW} – ${maxW} kg` : '—'}</span>
+        </div>
+        <div class="stat-cell">
+          <span class="stat-label">TYPE</span>
+          <span class="stat-value">${harvest ?? '—'}</span>
+        </div>
       </div>
 
       <div class="modal-actions-bar">
@@ -85,20 +153,6 @@ export function openModal(plant, _ignored, discovered, user, onToggle) {
         <span class="modal-progress-inline" id="modal-progress-text">
           ${disc.size}/${total} <span class="dim">(${pct}%)</span>
         </span>
-      </div>
-
-      <div class="modal-info-block">
-        <p class="modal-summary">${summaryParts.join(' &nbsp;·&nbsp; ')}</p>
-        ${sfLine}
-      </div>
-
-      <div class="modal-stats-grid">
-        <div class="stat-cell"><span class="stat-label">SEED</span><span class="stat-value">${coinPrice(seedPrice)}</span></div>
-        <div class="stat-cell"><span class="stat-label">SELL</span><span class="stat-value stat-sell">${coinPrice(sellPrice)}</span></div>
-        <div class="stat-cell"><span class="stat-label">GROW</span><span class="stat-value">${fmtTime(growT)}</span></div>
-        <div class="stat-cell"><span class="stat-label">REGROW</span><span class="stat-value">${regrowT ? fmtTime(regrowT) : '—'}</span></div>
-        <div class="stat-cell"><span class="stat-label">WEIGHT</span><span class="stat-value">${baseW != null && maxW != null ? `${baseW} – ${maxW} kg` : '—'}</span></div>
-        <div class="stat-cell"><span class="stat-label">TYPE</span><span class="stat-value">${harvest ?? '—'}</span></div>
       </div>
 
       <div class="modal-variants-section">
@@ -121,25 +175,16 @@ export function closeModal() {
   _onToggle = null;
 }
 
-// ── Acquisition line builder ──────────────────
-
-function buildAcqLine(acqText, seedPrice) {
-  const priceTag = seedPrice != null ? ` (${fmtCoinValue(seedPrice)} coins)` : '';
-  if (acqText) return acqText + priceTag;
-  return 'Seed Shop' + priceTag;
-}
-
 // ── Bulk check / clear ────────────────────────
 
 async function bulkToggle(plant, discovered, makeChecked) {
-  const key = plant.key;
+  const key  = plant.key;
   const disc = discovered.get(key) ?? new Set();
   const targets = makeChecked
     ? CROP_VARIANTS.filter(v => !disc.has(v))
     : CROP_VARIANTS.filter(v =>  disc.has(v));
   if (!targets.length) return;
 
-  // Optimistic
   for (const v of targets) {
     if (makeChecked) disc.add(v); else disc.delete(v);
     const tile = document.querySelector(`[data-variant="${v}"][data-plant-key="${key}"]`);
@@ -188,14 +233,12 @@ async function onOverlayClick(e) {
   const variantKey = tile.dataset.variant;
   const wasDisc    = tile.classList.contains('discovered');
 
-  // Optimistic
   tile.classList.toggle('discovered', !wasDisc);
   if (!wasDisc) tile.querySelector('.variant-img-wrap')?.insertAdjacentHTML('beforeend', `<span class="variant-check">✓</span>`);
   else tile.querySelector('.variant-check')?.remove();
 
   _onToggle?.(plantKey, variantKey, wasDisc);
 
-  // Recount from DOM for live progress
   const count = document.querySelectorAll(`.variant-tile.discovered[data-plant-key="${plantKey}"]`).length;
   const pct   = Math.round((count / CROP_VARIANTS.length) * 100);
   const el    = document.getElementById('modal-progress-text');
@@ -211,8 +254,8 @@ async function onOverlayClick(e) {
       if (error) throw error;
     } else {
       const { error } = await supabase.from('journal_entries')
-        .upsert({ user_id:user.id, item_type:'crop', item_key:plantKey, variant_key:variantKey },
-                { onConflict:'user_id,item_type,item_key,variant_key', ignoreDuplicates:true });
+        .upsert({ user_id: user.id, item_type: 'crop', item_key: plantKey, variant_key: variantKey },
+                { onConflict: 'user_id,item_type,item_key,variant_key', ignoreDuplicates: true });
       if (error) throw error;
     }
   } catch (err) {
