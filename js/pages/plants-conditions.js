@@ -3,7 +3,7 @@
 // v0.7.0 — fixed variant order, refined visual
 // ═══════════════════════════════════════════════
 
-import { CROP_VARIANTS, composedSpriteUrl, isTallPlant } from '../lib/aries.js';
+import { CROP_VARIANTS, MUTATION_API_NAME } from '../lib/aries.js';
 import { rarityPill, acquisitionBadge } from '../lib/icons.js';
 import { getSupabase } from '../lib/supabase.js';
 
@@ -80,9 +80,9 @@ function renderList() {
     const disc   = _discovered.get(plant.key) ?? new Set();
     const hasIt  = disc.has(_activeVariant);
     const name   = plant.crop?.name ?? plant.key;
-    const tall   = isTallPlant(plant.key);
-    // Show the actual variant sprite for this crop
-    const sprite = composedSpriteUrl(plant.key, _activeVariant, tall);
+    // Use mutation sprite for the active variant, crop sprite for Normal/MaxWeight
+    const cropSprite = plant.crop?.sprite ?? plant.seed?.sprite;
+    const sprite = getMutationSprite(_activeVariant, cropSprite);
 
     return `
       <div class="cond-plant-row${hasIt ? ' has-variant' : ''}"
@@ -142,4 +142,21 @@ async function onRowClick(e) {
     if (wasChecked) set.add(variantKey); else set.delete(variantKey);
     _onToggle?.(plantKey);
   }
+}
+// ── Mutation sprite lookup ────────────────────
+
+const ARIES_BASE = 'https://mg-api.ariedam.fr';
+
+const MUTATION_SPRITE_FILE = {
+  Wet: 'Wet', Chilled: 'Chilled', Frozen: 'Frozen', Thunderstruck: 'Thunderstruck',
+  Dawnlit: 'Dawnlit', Amberlit: 'Amberlit',
+  Gold: 'Gold', Rainbow: 'Rainbow',
+  Dawnbound: 'Dawncharged', Amberbound: 'Ambercharged',
+};
+
+function getMutationSprite(variant, cropSprite) {
+  if (variant === 'Normal' || variant === 'MaxWeight') return cropSprite;
+  const file = MUTATION_SPRITE_FILE[variant];
+  if (file) return `${ARIES_BASE}/assets/sprites/mutations/${file}.png`;
+  return cropSprite;
 }

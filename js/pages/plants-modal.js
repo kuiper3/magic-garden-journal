@@ -3,7 +3,7 @@
 // v0.7.0 — Aries-style modal with stages + stats
 // ═══════════════════════════════════════════════
 
-import { CROP_VARIANTS, composedSpriteUrl, isTallPlant, CROP_RARITY } from '../lib/aries.js';
+import { CROP_VARIANTS, MUTATION_API_NAME, CROP_RARITY } from '../lib/aries.js';
 import {
   acquisitionBadge, acquisitionText, seedFinderNote, fmtTime,
 } from '../lib/icons.js';
@@ -29,7 +29,7 @@ const fmtCoin = n => n == null ? '—' : n.toLocaleString();
 
 let _onToggle = null;
 
-export function openModal(plant, _ignored, discovered, user, onToggle) {
+export function openModal(plant, mutations, discovered, user, onToggle) {
   closeModal();
   _onToggle = onToggle;
 
@@ -72,18 +72,19 @@ export function openModal(plant, _ignored, discovered, user, onToggle) {
        </div>`
     : `<div class="stage"><span class="stage-img stage-missing">·</span><span class="stage-lbl">${label}</span></div>`;
 
-  // Variant tiles via composed sprite endpoint
-  const tall = isTallPlant(key);
+  // Variant tiles using direct sprite assets
+  const tall = isTallPlant ? isTallPlant(key) : false;
   const tiles = CROP_VARIANTS.map(variant => {
     const isDisc = disc.has(variant);
-    const url    = composedSpriteUrl(key, variant, tall);
+    const url    = getVariantSprite(variant, cropImg ?? seedImg, mutations);
     const cls    = variant === 'MaxWeight' ? ' maxweight' : '';
     const label  = variant === 'MaxWeight' ? 'Max Weight' : variant;
     return `
       <div class="variant-tile${isDisc ? ' discovered' : ''}${cls}"
            data-variant="${variant}" data-plant-key="${key}">
         <div class="variant-img-wrap">
-          <img src="${url}" alt="${label}" loading="lazy" onerror="this.style.display='none'">
+          <img src="${url}" alt="${label}" loading="lazy"
+               onerror="this.src='${cropImg ?? seedImg ?? ''}';this.onerror=null">
           ${isDisc ? `<span class="variant-check">✓</span>` : ''}
         </div>
         <span class="variant-name">${label}</span>
@@ -272,6 +273,51 @@ function updateModalProgress(disc) {
   if (!el) return;
   const pct = Math.round((disc.size / CROP_VARIANTS.length) * 100);
   el.innerHTML = `${disc.size}/${CROP_VARIANTS.length} <span class="dim">(${pct}%)</span>`;
+}
+
+// ── Variant sprite lookup ─────────────────────
+//
+// Sprite file names confirmed from AriesMod source (spriteComposer.js):
+//   Wet, Chilled, Frozen, Thunderstruck, Dawnlit  → sprite name matches
+//   Amberlit  (our name)  → API internal: Ambershine → sprite file: Amberlit.png
+//   Dawnbound (our name)  → API internal: Dawncharged → sprite file: Dawncharged.png
+//   Amberbound(our name)  → API internal: Ambercharged → sprite file: Ambercharged.png
+//   Gold, Rainbow         → colour mutations — prefer mutations data sprite, fallback file
+//   Normal / MaxWeight    → use base crop sprite (MaxWeight same image, scaled via CSS)
+
+const ARIES_BASE_URL = 'https://mg-api.ariedam.fr';
+
+const MUTATION_SPRITE_FILE = {
+  Wet:           'Wet',
+  Chilled:       'Chilled',
+  Frozen:        'Frozen',
+  Thunderstruck: 'Thunderstruck',
+  Dawnlit:       'Dawnlit',
+  Amberlit:      'Amberlit',      // sprite file is Amberlit even though API calls it Ambershine
+  Gold:          'Gold',
+  Rainbow:       'Rainbow',
+  Dawnbound:     'Dawncharged',   // sprite file: Dawncharged.png
+  Amberbound:    'Ambercharged',  // sprite file: Ambercharged.png
+};
+
+function getVariantSprite(variant, cropSprite, mutations) {
+  // Normal → base crop sprite
+  // MaxWeight → same sprite, CSS scales it up
+  if (variant === 'Normal' || variant === 'MaxWeight') return cropSprite;
+
+  // Try mutations data from API first (already fetched, has proper CDN URLs)
+  if (mutations) {
+    const apiName = MUTATION_API_NAME[variant]; // e.g. 'Ambershine' for 'Amberlit'
+    // Try our display name, then the API internal name
+    const fromData = mutations[variant]?.sprite ?? mutations[apiName]?.sprite;
+    if (fromData) return fromData;
+  }
+
+  // Direct sprite path fallback using confirmed filenames
+  const file = MUTATION_SPRITE_FILE[variant];
+  if (file) return `${ARIES_BASE_URL}/assets/sprites/mutations/${file}.png`;
+
+  return cropSprite; // last resort
 }
 
 function onKeydown(e) { if (e.key === 'Escape') closeModal(); }
