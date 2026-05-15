@@ -1,30 +1,30 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/pages/plants-conditions.js
-// v0.6.0 — mutation conditions tab
+// v0.7.0 — fixed variant order, refined visual
 // ═══════════════════════════════════════════════
 
-import { VARIANT_CATEGORIES, CROP_VARIANTS } from '../lib/aries.js';
-import { rarityBadge } from './plants-grid.js';
+import { CROP_VARIANTS, composedSpriteUrl, isTallPlant } from '../lib/aries.js';
+import { rarityPill, acquisitionBadge } from '../lib/icons.js';
 import { getSupabase } from '../lib/supabase.js';
 
-let _activeVariant  = 'Wet';
-let _missingOnly    = false;
-let _plants         = [];
-let _discovered     = new Map();
-let _onToggle       = null;
+// Condition variants — same order as in-game journal except skip Normal/MaxWeight
+const CONDITION_VARIANTS = CROP_VARIANTS.filter(v => v !== 'Normal' && v !== 'MaxWeight');
 
-// Flat list of variants available in the conditions tab (all except Normal/MaxWeight)
-const CONDITION_VARIANTS = Object.values(VARIANT_CATEGORIES).flat().filter(v => v !== 'Normal' && v !== 'MaxWeight');
+let _activeVariant = 'Wet';
+let _missingOnly   = false;
+let _plants        = [];
+let _discovered    = new Map();
+let _onToggle      = null;
 
 export function renderConditions(container, plants, discovered, onToggle) {
-  _plants = plants;
+  _plants     = plants;
   _discovered = discovered;
-  _onToggle = onToggle;
+  _onToggle   = onToggle;
 
   container.innerHTML = `
     <link rel="stylesheet" href="css/plants.css">
     <div class="cond-toolbar">
-      <div class="cond-variant-tabs" id="cond-tabs">${buildVariantTabs()}</div>
+      <div class="cond-variant-tabs" id="cond-tabs">${buildTabs()}</div>
       <div class="cond-filter-row">
         <button class="filter-pill${_missingOnly ? '' : ' active'}" id="cond-show-all">Show all</button>
         <button class="filter-pill${_missingOnly ? ' active' : ''}" id="cond-missing">Missing only</button>
@@ -35,20 +35,15 @@ export function renderConditions(container, plants, discovered, onToggle) {
   document.getElementById('cond-tabs')?.addEventListener('click', onTabClick);
   document.getElementById('cond-show-all')?.addEventListener('click', () => setFilter(false));
   document.getElementById('cond-missing')?.addEventListener('click', () => setFilter(true));
-  document.getElementById('cond-plant-list')?.addEventListener('click', onPlantClick);
+  document.getElementById('cond-plant-list')?.addEventListener('click', onRowClick);
 
-  renderPlantList();
+  renderList();
 }
 
-function buildVariantTabs() {
-  return Object.entries(VARIANT_CATEGORIES)
-    .filter(([, variants]) => variants.some(v => CONDITION_VARIANTS.includes(v)))
-    .map(([cat, variants]) => {
-      const relevant = variants.filter(v => CONDITION_VARIANTS.includes(v));
-      return relevant.map(v => `
-        <button class="cond-tab${v === _activeVariant ? ' active' : ''}"
-                data-variant="${v}">${v}</button>`).join('');
-    }).join('<span class="cond-tab-sep">·</span>');
+function buildTabs() {
+  return CONDITION_VARIANTS.map(v =>
+    `<button class="cond-tab${v === _activeVariant ? ' active' : ''}" data-variant="${v}">${v}</button>`
+  ).join('');
 }
 
 function onTabClick(e) {
@@ -56,17 +51,17 @@ function onTabClick(e) {
   if (!btn) return;
   _activeVariant = btn.dataset.variant;
   document.querySelectorAll('.cond-tab').forEach(b => b.classList.toggle('active', b.dataset.variant === _activeVariant));
-  renderPlantList();
+  renderList();
 }
 
-function setFilter(missing) {
-  _missingOnly = missing;
-  document.getElementById('cond-show-all')?.classList.toggle('active', !missing);
-  document.getElementById('cond-missing')?.classList.toggle('active', missing);
-  renderPlantList();
+function setFilter(missingOnly) {
+  _missingOnly = missingOnly;
+  document.getElementById('cond-show-all')?.classList.toggle('active', !missingOnly);
+  document.getElementById('cond-missing')?.classList.toggle('active', missingOnly);
+  renderList();
 }
 
-function renderPlantList() {
+function renderList() {
   const container = document.getElementById('cond-plant-list');
   if (!container) return;
 
@@ -82,29 +77,31 @@ function renderPlantList() {
   }
 
   container.innerHTML = filtered.map(plant => {
-    const disc      = _discovered.get(plant.key) ?? new Set();
-    const hasIt     = disc.has(_activeVariant);
-    const name      = plant.crop?.name ?? plant.key;
-    const sprite    = plant.crop?.sprite ?? plant.seed?.sprite ?? null;
+    const disc   = _discovered.get(plant.key) ?? new Set();
+    const hasIt  = disc.has(_activeVariant);
+    const name   = plant.crop?.name ?? plant.key;
+    const tall   = isTallPlant(plant.key);
+    // Show the actual variant sprite for this crop
+    const sprite = composedSpriteUrl(plant.key, _activeVariant, tall);
 
     return `
       <div class="cond-plant-row${hasIt ? ' has-variant' : ''}"
            data-plant-key="${plant.key}" data-variant="${_activeVariant}">
-        ${sprite ? `<img class="cond-sprite" src="${sprite}" alt="${name}" loading="lazy">` : '<span class="cond-sprite-missing">🌿</span>'}
+        <img class="cond-sprite${hasIt ? '' : ' dim'}" src="${sprite}" alt="${name}" loading="lazy"
+             onerror="this.style.display='none'">
         <div class="cond-name-wrap">
-          ${rarityBadge(plant.key)}
           <span class="cond-plant-name">${name}</span>
+          ${rarityPill(plant.key)}
+          ${acquisitionBadge(plant.key)}
         </div>
         <div class="cond-check-wrap">
-          <div class="cond-checkbox${hasIt ? ' checked' : ''}" aria-label="Toggle ${_activeVariant} for ${name}">
-            ${hasIt ? '✓' : ''}
-          </div>
+          <div class="cond-checkbox${hasIt ? ' checked' : ''}">${hasIt ? '✓' : ''}</div>
         </div>
       </div>`;
   }).join('');
 }
 
-async function onPlantClick(e) {
+async function onRowClick(e) {
   const row = e.target.closest('.cond-plant-row');
   if (!row) return;
 
@@ -115,15 +112,13 @@ async function onPlantClick(e) {
   // Optimistic
   row.classList.toggle('has-variant', !wasChecked);
   const checkbox = row.querySelector('.cond-checkbox');
-  if (checkbox) {
-    checkbox.classList.toggle('checked', !wasChecked);
-    checkbox.textContent = wasChecked ? '' : '✓';
-  }
+  const sprite   = row.querySelector('.cond-sprite');
+  if (checkbox) { checkbox.classList.toggle('checked', !wasChecked); checkbox.textContent = wasChecked ? '' : '✓'; }
+  if (sprite)   sprite.classList.toggle('dim', wasChecked);
 
-  // Update local discovered map
   if (!_discovered.has(plantKey)) _discovered.set(plantKey, new Set());
   const set = _discovered.get(plantKey);
-  wasChecked ? set.delete(variantKey) : set.add(variantKey);
+  if (wasChecked) set.delete(variantKey); else set.add(variantKey);
   _onToggle?.(plantKey);
 
   try {
@@ -135,15 +130,16 @@ async function onPlantClick(e) {
       if (error) throw error;
     } else {
       const { error } = await supabase.from('journal_entries')
-        .insert({ user_id:user.id, item_type:'crop', item_key:plantKey, variant_key:variantKey });
+        .upsert({ user_id:user.id, item_type:'crop', item_key:plantKey, variant_key:variantKey },
+                { onConflict:'user_id,item_type,item_key,variant_key', ignoreDuplicates:true });
       if (error) throw error;
     }
   } catch (err) {
     console.error('[conditions] toggle failed, reverting:', err);
     row.classList.toggle('has-variant', wasChecked);
     if (checkbox) { checkbox.classList.toggle('checked', wasChecked); checkbox.textContent = wasChecked ? '✓' : ''; }
-    const set = _discovered.get(plantKey);
-    wasChecked ? set.add(variantKey) : set.delete(variantKey);
+    if (sprite) sprite.classList.toggle('dim', !wasChecked);
+    if (wasChecked) set.add(variantKey); else set.delete(variantKey);
     _onToggle?.(plantKey);
   }
 }

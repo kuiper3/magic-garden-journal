@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/pages/plants.js
-// v0.6.0 — orchestrator: tabs, toolbar, state
+// v0.7.0 — orchestrator: tabs, toolbar, state
 // ═══════════════════════════════════════════════
 
 import { getPlantsSorted, fetchMutations, CROP_VARIANTS, PLANT_SORT_MODES } from '../lib/aries.js';
