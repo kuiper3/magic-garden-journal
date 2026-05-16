@@ -11,7 +11,7 @@ import { getSupabase } from '../lib/supabase.js';
 
 const ARIES_BASE = 'https://mg-api.ariedam.fr';
 
-function rarityIconName(rarity) { return rarity === 'Mythical' ? 'Mythic' : rarity; }
+function rarityIconName(rarity) { return rarity; // API already uses 'Mythic' }
 function rarityIconImg(cropKey) {
   const r = CROP_RARITY[cropKey] ?? 'Common';
   return `<img class="modal-rarity-icon" src="${ARIES_BASE}/assets/sprites/ui/Rarity${rarityIconName(r)}.png" alt="${r}" title="${r}">`;

@@ -10,7 +10,7 @@ const ARIES_BASE = 'https://mg-api.ariedam.fr';
 
 // Aries uses "Mythic" not "Mythical" in rarity icon filenames
 function rarityIconName(rarity) {
-  return rarity === 'Mythical' ? 'Mythic' : rarity;
+  return rarity; // API already uses 'Mythic'
 }
 
 function rarityIcon(cropKey) {
