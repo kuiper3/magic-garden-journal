@@ -139,7 +139,7 @@ function renderCurrentView() {
   const content = document.getElementById('plants-content');
   if (!content) return;
   if (_activeTab === 'conditions') {
-    renderConditions(content, _plants, _discovered, onConditionToggle);
+    renderConditions(content, _plants, _discovered, openConditionPlant);
     return;
   }
   const visible = filterPlants(_plants, _discovered, { searchQuery: _search, missingOnly: _missingOnly });
@@ -164,9 +164,8 @@ function onModalToggle(plantKey, variantKey, wasDiscovered) {
   refreshCardInGrid(plantKey);
 }
 
-function onConditionToggle(plantKey) {
-  updateOverallProgress();
-  refreshCardInGrid(plantKey);
+function openConditionPlant(plant) {
+  openModal(plant, _mutations, _discovered, _user, onModalToggle);
 }
 
 function refreshCardInGrid(plantKey) {

@@ -3,7 +3,7 @@
 // v0.7.0 — Aries-style modal with stages + stats
 // ═══════════════════════════════════════════════
 
-import { CROP_VARIANTS, MUTATION_API_NAME, CROP_RARITY } from '../lib/aries.js';
+import { CROP_VARIANTS, MUTATION_API_NAME, CROP_RARITY, composedSpriteUrl, isTallPlant } from '../lib/aries.js';
 import {
   acquisitionBadge, acquisitionText, seedFinderNote, fmtTime,
 } from '../lib/icons.js';
@@ -72,19 +72,21 @@ export function openModal(plant, mutations, discovered, user, onToggle) {
        </div>`
     : `<div class="stage"><span class="stage-img stage-missing">·</span><span class="stage-lbl">${label}</span></div>`;
 
-  // Variant tiles using direct sprite assets
-  const tall = isTallPlant ? isTallPlant(key) : false;
+  // Variant tiles using composed endpoint (per-crop mutated sprites)
+  const tall  = isTallPlant(key);
   const tiles = CROP_VARIANTS.map(variant => {
     const isDisc = disc.has(variant);
-    const url    = getVariantSprite(variant, cropImg ?? seedImg, mutations);
+    const url    = composedSpriteUrl(key, variant, tall);
     const cls    = variant === 'MaxWeight' ? ' maxweight' : '';
     const label  = variant === 'MaxWeight' ? 'Max Weight' : variant;
+    const fallback = getMutationIconFallback(variant, cropImg ?? seedImg);
     return `
       <div class="variant-tile${isDisc ? ' discovered' : ''}${cls}"
            data-variant="${variant}" data-plant-key="${key}">
         <div class="variant-img-wrap">
           <img src="${url}" alt="${label}" loading="lazy"
-               onerror="this.src='${cropImg ?? seedImg ?? ''}';this.onerror=null">
+               data-fallback="${fallback}"
+               onerror="if(this.dataset.fallback&&this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}else{this.style.display='none';}">
           ${isDisc ? `<span class="variant-check">✓</span>` : ''}
         </div>
         <span class="variant-name">${label}</span>
@@ -275,15 +277,17 @@ function updateModalProgress(disc) {
   el.innerHTML = `${disc.size}/${CROP_VARIANTS.length} <span class="dim">(${pct}%)</span>`;
 }
 
-// ── Variant sprite lookup ─────────────────────
+// ── Mutation icon fallback ────────────────────
 //
-// Sprite file names confirmed from AriesMod source (spriteComposer.js):
-//   Wet, Chilled, Frozen, Thunderstruck, Dawnlit  → sprite name matches
-//   Amberlit  (our name)  → API internal: Ambershine → sprite file: Amberlit.png
-//   Dawnbound (our name)  → API internal: Dawncharged → sprite file: Dawncharged.png
-//   Amberbound(our name)  → API internal: Ambercharged → sprite file: Ambercharged.png
-//   Gold, Rainbow         → colour mutations — prefer mutations data sprite, fallback file
-//   Normal / MaxWeight    → use base crop sprite (MaxWeight same image, scaled via CSS)
+// If the /assets/sprites/composed endpoint fails for a specific crop+mutation
+// combination, fall back to the plain mutation icon (e.g. wet droplet, gold sparkle).
+// As a last resort, fall back to the base crop sprite.
+//
+// Sprite filenames confirmed from AriesMod source (spriteComposer.js).
+// Our display name → sprite file name:
+//   Amberlit   → Amberlit.png      (API internal: Ambershine)
+//   Dawnbound  → Dawncharged.png
+//   Amberbound → Ambercharged.png
 
 const ARIES_BASE_URL = 'https://mg-api.ariedam.fr';
 
@@ -293,31 +297,17 @@ const MUTATION_SPRITE_FILE = {
   Frozen:        'Frozen',
   Thunderstruck: 'Thunderstruck',
   Dawnlit:       'Dawnlit',
-  Amberlit:      'Amberlit',      // sprite file is Amberlit even though API calls it Ambershine
+  Amberlit:      'Amberlit',
   Gold:          'Gold',
   Rainbow:       'Rainbow',
-  Dawnbound:     'Dawncharged',   // sprite file: Dawncharged.png
-  Amberbound:    'Ambercharged',  // sprite file: Ambercharged.png
+  Dawnbound:     'Dawncharged',
+  Amberbound:    'Ambercharged',
 };
 
-function getVariantSprite(variant, cropSprite, mutations) {
-  // Normal → base crop sprite
-  // MaxWeight → same sprite, CSS scales it up
-  if (variant === 'Normal' || variant === 'MaxWeight') return cropSprite;
-
-  // Try mutations data from API first (already fetched, has proper CDN URLs)
-  if (mutations) {
-    const apiName = MUTATION_API_NAME[variant]; // e.g. 'Ambershine' for 'Amberlit'
-    // Try our display name, then the API internal name
-    const fromData = mutations[variant]?.sprite ?? mutations[apiName]?.sprite;
-    if (fromData) return fromData;
-  }
-
-  // Direct sprite path fallback using confirmed filenames
+function getMutationIconFallback(variant, cropSprite) {
+  if (variant === 'Normal' || variant === 'MaxWeight') return cropSprite ?? '';
   const file = MUTATION_SPRITE_FILE[variant];
-  if (file) return `${ARIES_BASE_URL}/assets/sprites/mutations/${file}.png`;
-
-  return cropSprite; // last resort
+  return file ? `${ARIES_BASE_URL}/assets/sprites/mutations/${file}.png` : (cropSprite ?? '');
 }
 
 function onKeydown(e) { if (e.key === 'Escape') closeModal(); }

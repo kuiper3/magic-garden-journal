@@ -409,6 +409,96 @@
 }
 .cond-checkbox.checked { background: var(--green); border-color: var(--green); }
 
+/* ── Conditions grid (v0.7.1) ───────────────── */
+.cond-progress-inline {
+  margin-left: auto;
+  font-size: 0.8rem; color: rgba(255,255,255,0.7); white-space: nowrap;
+}
+.cond-progress-inline strong { color: #fff; font-weight: 600; }
+.cond-progress-inline .dim    { color: rgba(255,255,255,0.4); margin-left: 0.2rem; }
+
+.cond-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 0.7rem;
+}
+
+.cond-card {
+  background: var(--bg-2);
+  border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 0.8rem 0.7rem 0.7rem;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  transition: all 0.15s var(--ease);
+}
+.cond-card:hover {
+  border-color: rgba(90,154,110,0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+}
+.cond-card.has-variant {
+  border-color: rgba(90,154,110,0.6);
+  background: linear-gradient(180deg, rgba(90,154,110,0.08) 0%, var(--bg-2) 70%);
+}
+
+.cond-card-rarity {
+  position: absolute; top: 7px; right: 8px;
+  display: flex; align-items: center; gap: 3px;
+  background: rgba(0,0,0,0.45);
+  padding: 2px 5px;
+  border-radius: 6px;
+  backdrop-filter: blur(2px);
+}
+.cond-card-rarity .card-rarity-icon { width: 16px; height: 16px; }
+
+.cond-card-img-wrap {
+  position: relative;
+  width: 64px; height: 64px;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 0.35rem;
+}
+.cond-card-img {
+  width: 64px; height: 64px;
+  object-fit: contain;
+  image-rendering: crisp-edges;
+  transition: filter 0.2s;
+}
+.cond-card-img.dim {
+  filter: grayscale(1) brightness(0.4) opacity(0.55);
+}
+.cond-card-check {
+  position: absolute; bottom: -2px; right: -2px;
+  width: 18px; height: 18px;
+  background: var(--green);
+  color: #fff; font-size: 0.7rem; font-weight: 700;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--bg-2);
+}
+
+.cond-card-name {
+  font-family: var(--font-display);
+  font-size: 0.85rem; font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  width: 100%;
+}
+.cond-card.has-variant .cond-card-name { color: #ffffff; }
+
+/* ── Rarity badge backdrop fix (card view) ── */
+.card-rarity-wrap {
+  background: rgba(0,0,0,0.45);
+  padding: 2px 6px;
+  border-radius: 6px;
+  backdrop-filter: blur(2px);
+}
+
 /* ── Responsive ─────────────────────────────── */
 @media (max-width: 640px) {
   .plants-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
