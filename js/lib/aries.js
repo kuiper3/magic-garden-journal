@@ -171,19 +171,6 @@ export const TALL_PLANT_KEYS = new Set([
 
 export function isTallPlant(key) { return TALL_PLANT_KEYS.has(key); }
 
-// ── Composed sprite URL ───────────────────────
-// Source: Aries API docs — GET /assets/sprites/composed?key=<key>&mutations=<list>
-// The server auto-detects tall plants from metadata, so we always use sprite/plant/
-
-export function composedSpriteUrl(cropKey, variant, _tallIgnored = false) {
-  if (variant === 'Normal' || variant === 'MaxWeight') {
-    return `${BASE}/assets/sprites/composed?key=${encodeURIComponent(`sprite/plant/${cropKey}`)}`;
-  }
-  const apiMutation = MUTATION_API_NAME[variant];
-  if (!apiMutation) return `${BASE}/assets/sprites/composed?key=${encodeURIComponent(`sprite/plant/${cropKey}`)}`;
-  return `${BASE}/assets/sprites/composed?key=${encodeURIComponent(`sprite/plant/${cropKey}`)}&mutations=${apiMutation}`;
-}
-
 // ── Canonical crop order ──────────────────────
 // Source: in-game Garden Journal tab (verified from browser console output)
 
