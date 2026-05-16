@@ -253,3 +253,90 @@ export async function getPetsSorted() {
     .map(([key, val]) => ({ key, ...val, eggName: petEggMap[key]?.eggName ?? 'Unknown', eggPrice: petEggMap[key]?.eggCoinPrice ?? 9999 }))
     .sort((a, b) => a.eggPrice - b.eggPrice || a.key.localeCompare(b.key));
 }
+
+// ── Composed sprite key map ───────────────────
+// Some API plant keys don't match their sprite filename.
+// Map: API key → sprite filename stem used in composed endpoint.
+// Source: mg-data.json plants[key].crop.sprite URL stems.
+// Keys NOT in this map use the API key directly (e.g. Carrot → sprite/plant/Carrot).
+
+export const PLANT_SPRITE_KEY = {
+  OrangeTulip:   'Tulip',
+  Clover:        'CloverThreeLeaf',
+  FourLeafClover:'CloverFourLeaf',
+  Rose:          'RoseRed',
+  PurpleDaisy:   'DaisyPurple',
+  DawnCelestial: 'DawnCelestialCrop',
+  MoonCelestial: 'MoonCelestialCrop',
+};
+
+// Updated composedSpriteUrl using the sprite key map
+export function composedSpriteUrl(cropKey, variant, _tallIgnored = false) {
+  const spriteKey = PLANT_SPRITE_KEY[cropKey] ?? cropKey;
+  const key = `sprite/plant/${spriteKey}`;
+  if (variant === 'Normal' || variant === 'MaxWeight' || !MUTATION_API_NAME[variant]) {
+    return `${BASE}/assets/sprites/composed?key=${encodeURIComponent(key)}`;
+  }
+  return `${BASE}/assets/sprites/composed?key=${encodeURIComponent(key)}&mutations=${MUTATION_API_NAME[variant]}`;
+}
+
+// ── Static crop data ──────────────────────────
+// Source: wiki + Aries explorer. grow/regrow in seconds. weights in kg.
+// maxWeight = baseWeight × maxScale (from Aries explorer "Max Scale" column).
+
+export const CROP_STATIC_DATA = {
+  Carrot:        { grow: 4,      regrow: null,  baseWeight: 0.100, maxWeight: 0.300 },
+  Cabbage:       { grow: 35,     regrow: 45,    baseWeight: 1.000, maxWeight: 3.000 },
+  Strawberry:    { grow: 10,     regrow: null,  baseWeight: 0.050, maxWeight: 0.100 },
+  Aloe:          { grow: 45,     regrow: null,  baseWeight: 1.500, maxWeight: 3.750 },
+  Beet:          { grow: 60,     regrow: null,  baseWeight: 0.300, maxWeight: 0.900 },
+  Clover:        { grow: 240,    regrow: null,  baseWeight: 0.010, maxWeight: 0.030 },
+  FourLeafClover:{ grow: 240,    regrow: null,  baseWeight: 0.010, maxWeight: 0.030 },
+  Rose:          { grow: 300,    regrow: null,  baseWeight: 0.010, maxWeight: 0.040 },
+  FavaBean:      { grow: 240,    regrow: 900,   baseWeight: 0.030, maxWeight: 0.090 },
+  Delphinium:    { grow: 25,     regrow: null,  baseWeight: 0.020, maxWeight: 0.060 },
+  Blueberry:     { grow: 22,     regrow: 105,   baseWeight: 0.010, maxWeight: 0.020 },
+  Apple:         { grow: 5400,   regrow: 21600, baseWeight: 0.180, maxWeight: 0.360 },
+  OrangeTulip:   { grow: 8,      regrow: null,  baseWeight: 0.010, maxWeight: 0.030 },
+  Tomato:        { grow: 40,     regrow: 1100,  baseWeight: 0.300, maxWeight: 0.600 },
+  Daisy:         { grow: 60,     regrow: null,  baseWeight: 0.010, maxWeight: 0.025 },
+  PurpleDaisy:   { grow: 60,     regrow: null,  baseWeight: 0.010, maxWeight: 0.025 },
+  Daffodil:      { grow: 50,     regrow: null,  baseWeight: 0.010, maxWeight: 0.030 },
+  Corn:          { grow: 30,     regrow: 130,   baseWeight: 1.200, maxWeight: 2.400 },
+  Watermelon:    { grow: 720,    regrow: null,  baseWeight: 4.500, maxWeight: 13.500 },
+  Pumpkin:       { grow: 2100,   regrow: null,  baseWeight: 6.000, maxWeight: 18.000 },
+  Echeveria:     { grow: 120,    regrow: null,  baseWeight: 0.800, maxWeight: 2.200 },
+  Pear:          { grow: 5400,   regrow: 21600, baseWeight: 0.170, maxWeight: 0.340 },
+  Gentian:       { grow: 90,     regrow: null,  baseWeight: 0.020, maxWeight: 0.060 },
+  Lavender:      { grow: 100,    regrow: null,  baseWeight: 0.020, maxWeight: 0.060 },
+  Coconut:       { grow: 3600,   regrow: 43200, baseWeight: 5.000, maxWeight: 15.000 },
+  PineTree:      { grow: 14400,  regrow: null,  baseWeight: 1000,  maxWeight: 3500 },
+  Banana:        { grow: 4500,   regrow: 14400, baseWeight: 0.120, maxWeight: 0.204 },
+  Lily:          { grow: 240,    regrow: null,  baseWeight: 0.020, maxWeight: 0.055 },
+  Camellia:      { grow: 10800,  regrow: 86400, baseWeight: 0.300, maxWeight: 0.750 },
+  Squash:        { grow: 200,    regrow: 1500,  baseWeight: 0.300, maxWeight: 0.750 },
+  Peach:         { grow: 5400,   regrow: 7200,  baseWeight: 0.180, maxWeight: 0.540 },
+  BurrosTail:    { grow: 100,    regrow: 1800,  baseWeight: 0.400, maxWeight: 1.000 },
+  Saffron:       { grow: 180,    regrow: null,  baseWeight: 0.030, maxWeight: 0.090 },
+  Mushroom:      { grow: 86400,  regrow: null,  baseWeight: 2.500, maxWeight: 8.750 },
+  Cactus:        { grow: 9000,   regrow: null,  baseWeight: 1500,  maxWeight: 2700 },
+  Bamboo:        { grow: 43200,  regrow: null,  baseWeight: 1.000, maxWeight: 2.000 },
+  Poinsettia:    { grow: 5400,   regrow: 10800, baseWeight: 0.020, maxWeight: 0.040 },
+  VioletCort:    { grow: 64800,  regrow: null,  baseWeight: 2.000, maxWeight: 7.000 },
+  Chrysanthemum: { grow: 10800,  regrow: 86400, baseWeight: 0.010, maxWeight: 0.028 },
+  Date:          { grow: 3600,   regrow: 64800, baseWeight: 0.020, maxWeight: 0.040 },
+  Grape:         { grow: 900,    regrow: 86400, baseWeight: 3.000, maxWeight: 6.000 },
+  Eggplant:      { grow: 7200,   regrow: 2700,  baseWeight: 0.500, maxWeight: 1.250 },
+  Pepper:        { grow: 600,    regrow: 560,   baseWeight: 0.500, maxWeight: 1.000 },
+  Lemon:         { grow: 3600,   regrow: 43200, baseWeight: 0.500, maxWeight: 1.500 },
+  PassionFruit:  { grow: 2700,   regrow: 86400, baseWeight: 9.500, maxWeight: 19.000 },
+  DragonFruit:   { grow: 900,    regrow: 1800,  baseWeight: 8.400, maxWeight: 16.800 },
+  Cacao:         { grow: 5400,   regrow: 86400, baseWeight: 0.500, maxWeight: 1.250 },
+  Lychee:        { grow: 1800,   regrow: 86400, baseWeight: 9.000, maxWeight: 18.000 },
+  Ube:           { grow: 3600,   regrow: null,  baseWeight: 3.500, maxWeight: 10.500 },
+  Sunflower:     { grow: 18000,  regrow: 86400, baseWeight: 10.000, maxWeight: 25.000 },
+  Dawnbreaker:   { grow: 172800, regrow: null,  baseWeight: 100,   maxWeight: 300 },
+  Starweaver:    { grow: 86400,  regrow: 86400, baseWeight: 10.000, maxWeight: 20.000 },
+  DawnCelestial: { grow: 86400,  regrow: 86400, baseWeight: 6.000,  maxWeight: 15.000 },
+  MoonCelestial: { grow: 86400,  regrow: 86400, baseWeight: 2.000,  maxWeight: 4.000 },
+};

@@ -3,7 +3,7 @@
 // v0.7.0 — Aries-style modal with stages + stats
 // ═══════════════════════════════════════════════
 
-import { CROP_VARIANTS, MUTATION_API_NAME, CROP_RARITY, composedSpriteUrl, isTallPlant } from '../lib/aries.js';
+import { CROP_VARIANTS, MUTATION_API_NAME, CROP_RARITY, composedSpriteUrl, isTallPlant, CROP_STATIC_DATA } from '../lib/aries.js';
 import {
   acquisitionBadge, acquisitionText, seedFinderNote, fmtTime,
 } from '../lib/icons.js';
@@ -43,10 +43,11 @@ export function openModal(plant, mutations, discovered, user, onToggle) {
   const harvest   = plant.plant?.harvestType ?? null;
   const seedPrice = plant.seed?.coinPrice;
   const sellPrice = plant.crop?.baseSellPrice;
-  const growT     = plant.seed?.cropGrowTime;
-  const regrowT   = plant.seed?.regrowTime ?? plant.plant?.regrowTime;
-  const baseW     = plant.crop?.baseWeight;
-  const maxW      = plant.crop?.maxWeight;
+  const staticData = CROP_STATIC_DATA[key] ?? {};
+  const growT     = staticData.grow ?? plant.seed?.cropGrowTime;
+  const regrowT   = staticData.regrow ?? plant.seed?.regrowTime;
+  const baseW     = staticData.baseWeight ?? plant.crop?.baseWeight;
+  const maxW      = staticData.maxWeight ?? plant.crop?.maxWeight;
   const acqText   = acquisitionText(key);
   const sfNote    = seedFinderNote(key);
 
