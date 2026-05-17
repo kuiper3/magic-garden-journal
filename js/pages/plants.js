@@ -25,27 +25,27 @@ export function render(container) {
     <div class="plants-toolbar">
       <div class="toolbar-row toolbar-top">
         <div class="tab-group">
-          <button class="tab-btn active" data-tab="plants">🌱 Plants</button>
-          <button class="tab-btn" data-tab="conditions">⛅ Conditions</button>
+          <button class="tab-btn${_activeTab === 'plants' ? ' active' : ''}" data-tab="plants">🌱 Plants</button>
+          <button class="tab-btn${_activeTab === 'conditions' ? ' active' : ''}" data-tab="conditions">⛅ Conditions</button>
         </div>
         <div class="overall-progress-wrap">
           <div class="overall-bar-track"><div class="overall-bar-fill" id="overall-bar"></div></div>
           <span class="overall-text" id="overall-text">—</span>
         </div>
       </div>
-      <div class="toolbar-row toolbar-controls" id="plants-controls">
+      <div class="toolbar-row toolbar-controls" id="plants-controls"${_activeTab === 'conditions' ? ' style="display:none"' : ''}>
         <div class="search-wrap">
           <span class="search-icon">🔍</span>
-          <input type="text" id="plant-search" placeholder="Search…" autocomplete="off">
+          <input type="text" id="plant-search" placeholder="Search…" autocomplete="off" value="${_search}">
         </div>
         <div class="ctrl-group">
           <div class="sort-toggle">
-            <button class="sort-btn active" data-sort="journal">Journal</button>
-            <button class="sort-btn" data-sort="az">A–Z</button>
+            <button class="sort-btn${_sortMode === 'journal' ? ' active' : ''}" data-sort="journal">Journal</button>
+            <button class="sort-btn${_sortMode === 'az' ? ' active' : ''}" data-sort="az">A–Z</button>
           </div>
           <div class="view-toggle">
-            <button class="view-btn active" data-view="cards" title="Card view">⊞</button>
-            <button class="view-btn" data-view="list" title="List view">☰</button>
+            <button class="view-btn${_viewMode === 'cards' ? ' active' : ''}" data-view="cards" title="Card view">⊞</button>
+            <button class="view-btn${_viewMode === 'list' ? ' active' : ''}" data-view="list" title="List view">☰</button>
           </div>
           <button class="filter-pill${_missingOnly ? ' active' : ''}" id="missing-toggle">Missing only</button>
         </div>

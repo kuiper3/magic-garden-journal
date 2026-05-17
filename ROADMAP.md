@@ -1,46 +1,40 @@
 # Roadmap — Magic Garden Journal
 
-> **Document version:** `0.3.0`
-> **Last updated:** 2026-05-16
+> **Internal doc version:** `0.4.0` · **Last updated:** 2026-05-17
 
 ---
 
-## Phase 1 — Journal
+## Phase 1 — Journal (active)
 
-### ✅ 0.1.0 — Scaffold
-### ✅ 0.2.0 — Supabase auth
-### ✅ 0.3.0 — AriesMod cache layer
-### ✅ 0.4.0 — Plants grid (54 crops, sprites, progress)
-### ✅ 0.5.0 — Variant modal (12 tiles, upsert toggle)
-### ✅ 0.6.0 — Conditions tab, list view, search, sort, overall progress
-### ✅ 0.6.1 — Upsert fix, % on cards, acquisition icons
-### ✅ 0.7.0 — Aries-style cards (Seed→Plant→Crop stages, real coin/rarity icons)
-### ✅ 0.7.1 — Sprite key fixes, CROP_STATIC_DATA, conditions grid, rarity backdrop
+### ✅ 0.1–0.4 — Foundation
+Scaffold, Supabase auth, AriesMod cache, plants grid, variant modal.
 
-### 0.8.0 — Pets page
-- Grid of 23 pets sorted by egg type (CommonEgg → MythicalEgg)
-- Same Seed→Egg→Pet stage layout as Plants (egg sprite → pet sprite)
+### ✅ 0.5.x — Plants page complete
+Conditions grid, list view, Aries-style cards, composed variant sprites,
+all stats from wiki, acquisition badges, upsert fix, tab state fix. **Done at 0.5.9.**
+
+### 0.6.0 — Pets page
+- 23 pets grid, sorted by egg type (Common → Mythical)
+- Same Seed→Egg→Pet stage layout (egg sprite → hatched pet sprite)  
 - 4-variant modal: Normal, Gold, Rainbow, MaxWeight
 - Pet detail: diet crops, innate abilities with trigger types, hours to mature
-- Conditions tab for Gold and Rainbow pet variants
-- **Owned Pets sub-tab**: track individual pets (name, weight, current/max strength, abilities)
-- Done when: Pets tab matches Plants in completeness
+- Conditions tab: Gold and Rainbow pet variants
+- **Owned Pets sub-tab**: track individual pets (name, weight, current/max strength)
+- Done when: Pets tab feels as complete as Plants
 
-### 0.9.0 — Polish
-- Mobile bottom nav comfortable
-- Touch targets ≥ 44px
-- iOS safe-area padding
+### 0.7.0 — Polish
+- Mobile bottom nav, touch targets ≥ 44px, iOS safe-area
 - PWA manifest + icon
 - Lighthouse ≥ 90
 
 ### 1.0.0 — Production stable
-- No crashes or data loss for one week of daily use
-- Manual Supabase CSV backup documented
+- One week of daily use without crashes or data loss
+- Supabase CSV backup documented
 
 ---
 
 ## Phase 2 — Stock *(after 1.0.0)*
-`magic-garden-stock` — SSE client to `/live/stream`, shop + weather panels
+`magic-garden-stock` repo — SSE stream viewer for shop + weather.
 
 ## Phase 3 — Alexa Bridge *(after Stock 1.0.0)*
-`magic-garden-alexa-bridge` — shareable, no personal data
+`magic-garden-alexa-bridge` — shareable Voice Monkey integration.
