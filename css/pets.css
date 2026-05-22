@@ -81,36 +81,7 @@
 }
 .diet-chip-lbl { font-size: 0.74rem; color: rgba(255,255,255,0.78); white-space: nowrap; }
 
-/* ── Ability list ────────────────────────────── */
-.ability-list { display: flex; flex-direction: column; gap: 0.55rem; }
-.ability-row {
-  background: rgba(0,0,0,0.18);
-  border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 8px;
-  padding: 0.55rem 0.7rem;
-}
-.ability-head { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
-.ability-name { font-size: 0.85rem; font-weight: 600; color: #ffffff; }
-.ability-trigger {
-  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
-  color: #cfffcb; background: rgba(90,154,110,0.22);
-  border-radius: 4px; padding: 0.12rem 0.4rem;
-}
-.ability-share {
-  margin-left: auto;
-  font-size: 0.78rem; font-weight: 700; color: var(--gold-light);
-  font-variant-numeric: tabular-nums;
-}
-.ability-desc { font-size: 0.74rem; color: rgba(255,255,255,0.55); line-height: 1.4; margin-top: 0.3rem; }
-.ability-bar-track {
-  width: 100%; height: 4px; margin-top: 0.45rem;
-  background: rgba(0,0,0,0.35); border-radius: 3px; overflow: hidden;
-}
-.ability-bar-fill {
-  height: 100%; border-radius: 3px;
-  background: linear-gradient(90deg, #5a9a6e 0%, #8fd0a3 100%);
-  transition: width 0.4s var(--ease);
-}
+
 
 /* ── Variant grid: keep 4 across (pets have exactly 4) ── */
 .pet-variants-grid { grid-template-columns: repeat(4, 1fr); }
@@ -119,6 +90,15 @@
 .cond-card.cond-card-maxweight .cond-card-img {
   transform: scale(1.18);
   filter: drop-shadow(0 0 5px rgba(212,168,83,0.65));
+}
+/* Collected overrides the glow for MaxWeight */
+.cond-card.cond-card-maxweight.has-variant .cond-card-img {
+  filter: drop-shadow(0 0 6px rgba(212,168,83,0.85));
+}
+/* Uncollected MaxWeight must override scale/glow to stay greyed out */
+.cond-card.cond-card-maxweight .cond-card-img.dim {
+  filter: grayscale(1) brightness(0.4) opacity(0.55) !important;
+  transform: scale(1);
 }
 .cond-card.cond-card-maxweight.has-variant {
   border-color: rgba(212,168,83,0.7);
@@ -133,9 +113,62 @@
   padding: 0 0.1rem;
 }
 
-/* Ability rows: slimmed (no % / bars) */
-.ability-row { padding: 0.5rem 0.7rem; }
-.ability-head { gap: 0.4rem; margin-bottom: 0.2rem; }
+/* ── Ability accordion (collapsible) ────────────── */
+.ability-row {
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.ability-row summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.5rem 0.7rem;
+  user-select: none;
+}
+.ability-row summary::-webkit-details-marker { display: none; }
+.ability-head {
+  display: flex; align-items: center; gap: 0.4rem;
+  margin-bottom: 0;
+}
+.ability-expand-icon {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.35);
+  transition: transform 0.2s;
+}
+.ability-row[open] .ability-expand-icon { transform: rotate(180deg); }
+.ability-row[open] summary { border-bottom: 1px solid rgba(255,255,255,0.06); }
+.ability-body {
+  padding: 0.5rem 0.7rem 0.55rem;
+}
+.ability-desc {
+  font-size: 0.75rem; color: rgba(255,255,255,0.55);
+  line-height: 1.45; margin: 0 0 0.4rem;
+}
+.ability-stats-row {
+  display: flex; flex-wrap: wrap; gap: 0.4rem;
+}
+.ability-stat {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  font-size: 0.74rem; font-weight: 600;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 5px;
+  padding: 0.2rem 0.5rem;
+  color: rgba(255,255,255,0.85);
+}
+.ability-stat.passive { color: rgba(203,255,203,0.75); font-weight: 500; }
+.ability-stat.effect  { color: var(--gold-light, #f0c060); }
+.ability-stat-lbl {
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: rgba(255,255,255,0.35);
+  margin-right: 0.1rem;
+}
+.ability-trigger.weather {
+  background: rgba(100,160,220,0.2); color: #a8d4f5;
+  border: 1px solid rgba(100,160,220,0.25);
+}
 
 /* ── Responsive ─────────────────────────────── */
 @media (max-width: 640px) {

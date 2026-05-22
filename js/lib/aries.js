@@ -355,3 +355,91 @@ export const CROP_STATIC_DATA = {
   DawnCelestial: { grow: 86400,  regrow: 86400, baseWeight: 6.000,  maxWeight: 15.000 },
   MoonCelestial: { grow: 86400,  regrow: 86400, baseWeight: 2.000,  maxWeight: 4.000 },
 };
+
+// ── Ability static data (sourced from wiki) ───
+// Keyed by prettified display name (matches ab.name ?? prettify(abKey)).
+// procRate: shown as "X/min" (chance-per-minute) or "X%" (probability).
+// effect:   the ability's impact value (size %, coins, time, etc.).
+// passive:  true = always active, no proc. Omit trigger context for these.
+// weather:  restricting weather context if any.
+
+export const ABILITY_STATIC_DATA = {
+  // Coin Finder
+  'Coin Finder I':           { procRate: '35/min',  effect: '1 – 120,000 coins' },
+  'Coin Finder II':          { procRate: '13/min',  effect: '1 – 1,200,000 coins' },
+  'Coin Finder III':         { procRate: '6/min',   effect: '1 – 10,000,000 coins' },
+  'Snow Coin Finder':        { procRate: '15/min',  effect: '1 – 5,000,000 coins', weather: 'Snow' },
+  'Dawn Coin Finder':        { procRate: '45/min',  effect: '1 – 6,000,000 coins', weather: 'Dawn' },
+  // Crop Eater
+  'Crop Eater':              { procRate: '60/min',  effect: '+150% sell bonus' },
+  // Crop Refund
+  'Crop Refund':             { procRate: '20%',     effect: 'Crop returned' },
+  // Crop Size Boost
+  'Crop Size Boost I':       { procRate: '0.3/min', effect: '+6% crop size' },
+  'Crop Size Boost II':      { procRate: '0.4/min', effect: '+10% crop size' },
+  'Snow Crop Size Boost':    { procRate: '0.8/min', effect: '+12% crop size', weather: 'Snow' },
+  // Dawn Capture
+  'Dawn Capture':            { procRate: '300s ÷ strength', effect: 'Converts Dawnlit→1 capsule, Dawnbound→2' },
+  // Double Harvest
+  'Double Harvest':          { procRate: '5%',      effect: 'Extra crop harvest' },
+  // Double Hatch
+  'Double Hatch':            { procRate: '3%',      effect: 'Extra pet hatched' },
+  // Egg Growth Boost
+  'Egg Growth Boost I':      { procRate: '21/min',  effect: '−7 min hatch time' },
+  'Egg Growth Boost II':     { procRate: '24/min',  effect: '−9 min hatch time' },
+  'Egg Growth Boost III':    { procRate: '27/min',  effect: '−11 min hatch time' },
+  // Granters
+  'Rain Granter':            { procRate: '10/min',  effect: 'Grants Wet mutation' },
+  'Snow Granter':            { procRate: '8/min',   effect: 'Grants Chilled mutation' },
+  'Frost Granter':           { procRate: '6/min',   effect: 'Grants Frozen mutation' },
+  'Dawnlit Granter':         { procRate: '4/min',   effect: 'Grants Dawnlit mutation' },
+  'Amberlit Granter':        { procRate: '2/min',   effect: 'Grants Amberlit mutation' },
+  'Gold Granter':            { procRate: '0.72/min',effect: 'Grants Gold mutation' },
+  'Rainbow Granter':         { procRate: '0.72/min',effect: 'Grants Rainbow mutation' },
+  // Hatch XP Boost
+  'Hatch XP Boost I':        { procRate: '50%',     effect: '+8,000 XP on hatch' },
+  'Hatch XP Boost II':       { procRate: '60%',     effect: '+12,000 XP on hatch' },
+  // Hunger Boost (passive — always active)
+  'Hunger Boost I':          { passive: true,        effect: '−12% hunger depletion' },
+  'Hunger Boost II':         { passive: true,        effect: '−16% hunger depletion' },
+  'Snow Hunger Boost':       { passive: true,        effect: '−30% hunger depletion', weather: 'Snow' },
+  // Hunger Restore
+  'Hunger Restore I':        { procRate: '12/min',  effect: 'Restores 30% hunger' },
+  'Hunger Restore II':       { procRate: '14/min',  effect: 'Restores 35% hunger' },
+  // Max Strength Boost
+  'Max Strength Boost I':    { procRate: '12%',     effect: '+2.4% max strength' },
+  'Max Strength Boost II':   { procRate: '14%',     effect: '+3.5% max strength' },
+  // Pet Mutation Boost (passive)
+  'Pet Mutation Boost I':    { passive: true,        effect: '+7% mutation chance' },
+  'Pet Mutation Boost II':   { passive: true,        effect: '+10% mutation chance' },
+  // Pet Refund
+  'Pet Refund I':            { procRate: '5%',      effect: 'Pet returned as egg' },
+  'Pet Refund II':           { procRate: '7%',      effect: 'Pet returned as egg' },
+  // Plant Growth Boost
+  'Plant Growth Boost I':    { procRate: '24/min',  effect: '−3 min growth time' },
+  'Plant Growth Boost II':   { procRate: '27/min',  effect: '−5 min growth time' },
+  'Snow Plant Growth Boost': { procRate: '40/min',  effect: '−6 min growth time', weather: 'Snow' },
+  'Dawn Plant Growth Boost': { procRate: '60/min',  effect: '−6 min growth time', weather: 'Dawn' },
+  'Amber Plant Growth Boost':{ procRate: '80/min',  effect: '−6 min growth time', weather: 'Amber Moon' },
+  // Seed Finder
+  'Seed Finder I':           { procRate: '40/min',  effect: 'Common & Uncommon seeds' },
+  'Seed Finder II':          { procRate: '20/min',  effect: 'Rare & Legendary seeds' },
+  'Seed Finder III':         { procRate: '10/min',  effect: 'Mythical seeds' },
+  // Sell Boost
+  'Sell Boost I':            { procRate: '10%',     effect: '+20% sell price' },
+  'Sell Boost II':           { procRate: '12%',     effect: '+30% sell price' },
+  'Sell Boost III':          { procRate: '14%',     effect: '+40% sell price' },
+  'Sell Boost IV':           { procRate: '16%',     effect: '+50% sell price' },
+  // Weather Mutation Boost (passive)
+  'Weather Mutation Boost I':  { passive: true,     effect: '+15% weather mutation chance' },
+  'Weather Mutation Boost II': { passive: true,     effect: '+20% weather mutation chance' },
+  'Snow Boost':              { passive: true,        effect: '+32% Chilled chance', weather: 'Snow' },
+  'Dawn Boost':              { passive: true,        effect: '+36% Dawnlit chance', weather: 'Dawn' },
+  'Amber Moon Boost':        { passive: true,        effect: '+40% Amberlit chance', weather: 'Amber Moon' },
+  'Dawnbinder Boost':        { passive: true,        effect: '+40% Dawnbinder proc chance' },
+  // XP Boost
+  'XP Boost I':              { procRate: '30/min',  effect: '+300 XP to active pets' },
+  'XP Boost II':             { procRate: '35/min',  effect: '+400 XP to active pets' },
+  'Snow XP Boost':           { procRate: '50/min',  effect: '+450 XP to active pets', weather: 'Snow' },
+  'Dawn XP Boost':           { procRate: '75/min',  effect: '+850 XP to active pets', weather: 'Dawn' },
+};

@@ -3,7 +3,7 @@
 // v0.6.0 — pet detail: egg, diet, abilities, variants
 // ═══════════════════════════════════════════════
 
-import { PET_VARIANTS, composedPetSpriteUrl } from '../lib/aries.js';
+import { PET_VARIANTS, composedPetSpriteUrl, ABILITY_STATIC_DATA } from '../lib/aries.js';
 import { getSupabase } from '../lib/supabase.js';
 import { petDisplayName, fmtHours } from './pets-grid.js';
 
@@ -67,25 +67,38 @@ export function openPetModal(pet, ctx, discovered, user, onToggle) {
       }).join('')
     : `<span class="modal-empty-note">No diet data</span>`;
 
-  // ── Abilities — name, trigger context, description only ──
-  const weights = pet.innateAbilityWeights ?? {};
-  const entries = Object.entries(weights);
-  const abilityRows = entries.length
-    ? entries.map(([abKey]) => {
-          const ab = abilityLookup[abKey] ?? {};
-          const abName = ab.name ?? prettify(abKey);
-          const trigger = ab.triggerType ?? ab.trigger ?? ab.triggerOn ?? null;
-          const desc = ab.description ?? ab.desc ?? '';
+  // ── Abilities — collapsible rows with wiki proc rates + effects ──
+  // Trigger types like 'Continuous' are redundant (means "always active") — skip them.
+  const SKIP_TRIGGERS = new Set(['continuous','passive','always','always active','permanent']);
+  const weights   = pet.innateAbilityWeights ?? {};
+  const abEntries = Object.entries(weights);
+  const abilityRows = abEntries.length
+    ? abEntries.map(([abKey]) => {
+          const ab      = abilityLookup[abKey] ?? {};
+          const abName  = ab.name ?? prettify(abKey);
+          const rawTrig = ab.triggerType ?? ab.trigger ?? ab.triggerOn ?? null;
+          const trigger = rawTrig && !SKIP_TRIGGERS.has(String(rawTrig).toLowerCase()) ? prettify(rawTrig) : null;
+          const apiDesc = ab.description ?? ab.desc ?? '';
+          const stat    = ABILITY_STATIC_DATA[abName] ?? {};
           return `
-            <div class="ability-row">
-              <div class="ability-head">
+            <details class="ability-row">
+              <summary class="ability-head">
                 <span class="ability-name">${abName}</span>
-                ${trigger ? `<span class="ability-trigger">${prettify(trigger)}</span>` : ''}
+                ${stat.weather ? `<span class="ability-trigger weather">${stat.weather}</span>` : trigger ? `<span class="ability-trigger">${trigger}</span>` : ''}
+                <span class="ability-expand-icon" aria-hidden="true">▾</span>
+              </summary>
+              <div class="ability-body">
+                ${apiDesc ? `<p class="ability-desc">${apiDesc}</p>` : ''}
+                <div class="ability-stats-row">
+                  ${stat.passive
+                    ? `<span class="ability-stat passive">Always active</span>`
+                    : stat.procRate ? `<span class="ability-stat"><span class="ability-stat-lbl">Proc</span>${stat.procRate}</span>` : ''}
+                  ${stat.effect ? `<span class="ability-stat effect"><span class="ability-stat-lbl">Effect</span>${stat.effect}</span>` : ''}
+                </div>
               </div>
-              ${desc ? `<div class="ability-desc">${desc}</div>` : ''}
-            </div>`;
+            </details>`;
         }).join('')
-    : `<span class="modal-empty-note">No innate abilities</span>`;
+    : `<span class="modal-empty-note">No abilities</span>`;
 
   // ── Variant tiles (Normal / Gold / Rainbow / MaxWeight) ──
   const tiles = PET_VARIANTS.map(variant => {
@@ -157,7 +170,7 @@ export function openPetModal(pet, ctx, discovered, user, onToggle) {
       </div>
 
       <div class="modal-detail-section">
-        <div class="modal-section-title">Innate Abilities</div>
+        <div class="modal-section-title">Abilities</div>
         <div class="ability-list">${abilityRows}</div>
       </div>
 
