@@ -1,7 +1,7 @@
 # AI Handoff — Magic Garden Journal
 
-> **Internal doc version:** `0.5.1` · **Last updated:** 2026-05-21
-> **Project version:** `0.6.1`
+> **Internal doc version:** `0.5.2` · **Last updated:** 2026-05-22
+> **Project version:** `0.6.2`
 
 ---
 
@@ -10,8 +10,8 @@
 - **Owner:** Shawn (GitHub: `kuiper3`)
 - **Repo:** https://github.com/kuiper3/magic-garden-journal
 - **Live:** https://magic-garden-journal.vercel.app
-- **Current version:** `0.6.1` — Pets: pet-only cards, Egg→Pet modal, Mutations tab
-- **Next milestone:** `0.6.2` — Eggs Explorer tab + per-pet feeding values (see §10–11)
+- **Current version:** `0.6.2` — Mutations: all 4 variants, egg filter; ability descriptions; plant card timing
+- **Next milestone:** `0.6.3` — Eggs Explorer tab + per-pet feeding values (see §10–11)
 
 ---
 
@@ -53,7 +53,7 @@ js/pages/
   pets.js                   Orchestrator — grid, Egg/A–Z sort, modal, progress
   pets-grid.js              buildPetCard(), buildPetRow(), filterPets()
   pets-modal.js             Modal — Egg→Pet stages, diet chips, abilities, 4 variant tiles
-  pets-conditions.js        Mutations tab — Gold/Rainbow grid, Missing filter
+  pets-conditions.js        Mutations tab — all 4 variants, egg multi-select filter
 index.html                  Shell only
 package.json                type:module, version 0.5.9
 ```
@@ -236,3 +236,30 @@ aries.js, a `feedHunger(base, weather, colMut)` helper, and surface it in the mo
 Diet section (each diet chip → its base %, with a small weather/mutation toggle).
 TODO: verify the column-mutation identities + that ×1/4/6/7/10 holds across all
 rarities (spot-checked Common + Snow; held).
+
+---
+
+## 12. Owned Pets tab (planned — 0.7.0)
+
+This is a **separate nav section** ("Owned Pets"), not a sub-tab inside Pets.
+Key design decisions from Shawn:
+- Each pet owned is stored as an individual record: pet key, nickname, weight, variant, abilities, date added.
+- Pets page shows a **counter badge** per species ("You own 2 Bees"); clicking it
+  shows a small inline dropdown of that user's owned instances.
+- Ability proc % auto-calculated from the owned pet's rolled weights (formula in §11).
+- Schema (draft):
+  ```sql
+  create table public.owned_pets (
+    id         uuid primary key default gen_random_uuid(),
+    user_id    uuid not null references auth.users(id) on delete cascade,
+    pet_key    text not null,
+    nickname   text,
+    weight_kg  numeric,
+    variant    text,
+    abilities  jsonb,     -- {abilityKey: weight} from the actual rolled pet
+    created_at timestamptz default now()
+  );
+  -- RLS: auth.uid() = user_id
+  ```
+- Build order: Supabase migration → `owned-pets.js` + `owned-pets.css`.
+  Pets page gains a lightweight owned-count overlay fetched once on init.

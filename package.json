@@ -1,6 +1,6 @@
 {
   "name": "magic-garden-journal",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Personal crop and pet variant tracker for Magic Garden. Syncs across phone and PC via Supabase.",
   "private": true,
   "type": "module",

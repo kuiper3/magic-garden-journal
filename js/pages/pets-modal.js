@@ -67,28 +67,22 @@ export function openPetModal(pet, ctx, discovered, user, onToggle) {
       }).join('')
     : `<span class="modal-empty-note">No diet data</span>`;
 
-  // ── Abilities (weighted) ──
+  // ── Abilities — name, trigger context, description only ──
   const weights = pet.innateAbilityWeights ?? {};
   const entries = Object.entries(weights);
-  const totalW  = entries.reduce((s, [, w]) => s + (Number(w) || 0), 0) || 1;
   const abilityRows = entries.length
-    ? entries
-        .sort((a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0))
-        .map(([abKey, w]) => {
+    ? entries.map(([abKey]) => {
           const ab = abilityLookup[abKey] ?? {};
           const abName = ab.name ?? prettify(abKey);
           const trigger = ab.triggerType ?? ab.trigger ?? ab.triggerOn ?? null;
           const desc = ab.description ?? ab.desc ?? '';
-          const share = Math.round(((Number(w) || 0) / totalW) * 100);
           return `
             <div class="ability-row">
               <div class="ability-head">
                 <span class="ability-name">${abName}</span>
                 ${trigger ? `<span class="ability-trigger">${prettify(trigger)}</span>` : ''}
-                <span class="ability-share">${share}%</span>
               </div>
               ${desc ? `<div class="ability-desc">${desc}</div>` : ''}
-              <div class="ability-bar-track"><div class="ability-bar-fill" style="width:${share}%"></div></div>
             </div>`;
         }).join('')
     : `<span class="modal-empty-note">No innate abilities</span>`;

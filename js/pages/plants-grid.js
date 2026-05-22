@@ -1,10 +1,10 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/pages/plants-grid.js
-// v0.7.0 — Seed → Plant → Crop card layout
+// v0.7.1 — grow + regrow time on card
 // ═══════════════════════════════════════════════
 
-import { CROP_VARIANTS, CROP_RARITY } from '../lib/aries.js';
-import { acquisitionBadge, acquisitionText } from '../lib/icons.js';
+import { CROP_VARIANTS, CROP_RARITY, CROP_STATIC_DATA } from '../lib/aries.js';
+import { acquisitionBadge, acquisitionText, fmtTime } from '../lib/icons.js';
 
 const ARIES_BASE = 'https://mg-api.ariedam.fr';
 
@@ -51,6 +51,9 @@ export function buildCard(plant, discovered) {
   const total     = CROP_VARIANTS.length;
   const pct       = Math.round((disc / total) * 100);
   const done      = disc >= total;
+  const staticData = CROP_STATIC_DATA[key] ?? {};
+  const growT     = staticData.grow ?? plant.seed?.cropGrowTime ?? null;
+  const regrowT   = staticData.regrow ?? plant.seed?.regrowTime ?? null;
 
   const stage = (src, label) => src
     ? `<div class="stage">
@@ -67,6 +70,11 @@ export function buildCard(plant, discovered) {
     ? `<div class="card-row"><span class="card-row-lbl">${SELL_SVG}Sell</span><span class="card-val sell-val">${fmtCoinValue(sellPrice)}</span></div>`
     : `<div class="card-row"><span class="card-row-lbl">${SELL_SVG}Sell</span><span class="card-val muted">—</span></div>`;
 
+  const growRow = `<div class="card-row"><span class="card-row-lbl">⏱ Grow</span><span class="card-val">${growT ? fmtTime(growT) : '—'}</span></div>`;
+  const regrowRow = regrowT
+    ? `<div class="card-row"><span class="card-row-lbl">🔄 Regrow</span><span class="card-val">${fmtTime(regrowT)}</span></div>`
+    : '';
+
   return `
     <div class="plant-card${buy ? ' purchasable' : ''}${done ? ' complete' : ''}" data-plant-key="${key}">
       <div class="card-rarity-wrap">${rarityIcon(key)}${acquisitionBadge(key)}</div>
@@ -81,6 +89,8 @@ export function buildCard(plant, discovered) {
       <div class="card-stats">
         ${seedRow}
         ${sellRow}
+        ${growRow}
+        ${regrowRow}
         <div class="card-row card-progress-row">
           <span class="card-row-lbl">📓 Journal</span>
           <span class="card-val${done ? ' done' : ''}">${disc}/${total} <span class="pct">(${pct}%)</span></span>

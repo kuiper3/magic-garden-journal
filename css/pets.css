@@ -115,6 +115,28 @@
 /* ── Variant grid: keep 4 across (pets have exactly 4) ── */
 .pet-variants-grid { grid-template-columns: repeat(4, 1fr); }
 
+/* ── Mutations: MaxWeight card — scale glow like variant tile ── */
+.cond-card.cond-card-maxweight .cond-card-img {
+  transform: scale(1.18);
+  filter: drop-shadow(0 0 5px rgba(212,168,83,0.65));
+}
+.cond-card.cond-card-maxweight.has-variant {
+  border-color: rgba(212,168,83,0.7);
+  background: linear-gradient(180deg, rgba(212,168,83,0.08) 0%, var(--bg-2) 70%);
+}
+
+/* ── Egg filter row separator ─────────────────── */
+.pet-cond-egg-sep {
+  color: rgba(255,255,255,0.2);
+  align-self: center;
+  font-size: 0.85rem;
+  padding: 0 0.1rem;
+}
+
+/* Ability rows: slimmed (no % / bars) */
+.ability-row { padding: 0.5rem 0.7rem; }
+.ability-head { gap: 0.4rem; margin-bottom: 0.2rem; }
+
 /* ── Responsive ─────────────────────────────── */
 @media (max-width: 640px) {
   .pet-stats-grid { grid-template-columns: repeat(3, 1fr); gap: 0.6rem 0.8rem; }

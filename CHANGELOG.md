@@ -1,9 +1,30 @@
 # Changelog — Magic Garden Journal
 
-> **Internal doc version:** `0.5.1` · **Last updated:** 2026-05-21
+> **Internal doc version:** `0.5.2` · **Last updated:** 2026-05-22
 > Versions here track the **project** (package.json), not this document.
 
 ---
+
+## [0.6.2] — 2026-05-22 *(Mutations + ability polish + plant card timing)*
+
+### Changed
+- **Mutations tab: all 4 variants** — Normal, Gold, Rainbow, Max Weight. Normal and
+  Max Weight use the base pet sprite (no composed endpoint); Max Weight gets a scale +
+  gold-glow CSS treatment matching the in-modal variant tile.
+- **Mutations tab: egg-type multi-select filter** — pills for each egg type derived
+  from the live pet data (Common, Uncommon, Rare, Legendary, Snow, Dawn, Horse,
+  Mythical, Winter). Multi-select: click to toggle; no selection = show all.
+  Combined with Show all / Missing-only, counts update to reflect the filtered set.
+- **Ability display simplified** — removed weighted % share and progress bars.
+  Now shows: ability name, trigger tag, and description only.
+- **Plant card: grow + regrow time** — "⏱ Grow" row always shown; "🔄 Regrow"
+  row appears only for multi-harvest crops (hidden when `null`). Values from
+  `CROP_STATIC_DATA`.
+
+### Notes
+- Regrow in the **modal** stats grid was already correct (shows `—` for single-harvest,
+  time for multi-harvest). The card was missing it; that's now fixed.
+- Owned Pets (0.7.0) and per-pet feeding values (0.6.3) remain deferred; see §10–11.
 
 ## [0.6.1] — 2026-05-21 *(Pets: card + mutations tab)*
 
