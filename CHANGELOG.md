@@ -1,9 +1,38 @@
 # Changelog — Magic Garden Journal
 
-> **Internal doc version:** `0.4.0` · **Last updated:** 2026-05-17
+> **Internal doc version:** `0.5.0` · **Last updated:** 2026-05-21
 > Versions here track the **project** (package.json), not this document.
 
 ---
+
+## [0.6.0] — 2026-05-21 *(Pets page)*
+
+### Added
+- **Pets collection page** — full parity with Plants for discovery tracking.
+  - `js/pages/pets.js` — orchestrator: search, Egg / A–Z sort, card + list views,
+    Missing-only filter, overall progress. State persists across navigation.
+  - `js/pages/pets-grid.js` — `buildPetCard` / `buildPetRow` / `filterPets`.
+    Egg → Pet stage layout (vs. crops' Seed → Plant → Crop). Shows cheapest egg
+    price + hours-to-mature. `petDisplayName()` spaces PascalCase keys
+    (`SnowFox` → "Snow Fox"); `fmtHours()` renders mature time.
+  - `js/pages/pets-modal.js` — egg source + price, rarity, mature time,
+    **diet** crop chips (sprite + name), **innate abilities** (name, trigger,
+    weighted % share, description), and the 4 variant tiles
+    (Normal / Gold / Rainbow / MaxWeight) with Supabase tracking.
+  - `css/pets.css` — diet chips, ability list, 3-up stat grid, 4-up variant grid.
+- `aries.js`: `composedPetSpriteUrl(pet, variant)` + `PET_SPRITE_KEY` override map.
+  The composed stem is derived from each pet's own `sprite` URL at runtime, so
+  `SnowFox` / `WhiteCaribou` / `FireHorse` resolve without a hardcoded table.
+
+### Notes
+- **No schema migration needed** — `journal_entries.item_type` already allows `'pet'`.
+- Pet diet sprites reuse cached `/data/plants`; abilities reuse `/data/abilities`.
+
+### Deferred to 0.6.1
+- **Owned Pets sub-tab** — tracks individual pet *instances* (name, weight, abilities);
+  needs its own Supabase table, so it's split out from the discovery grid.
+- **Pet Conditions tab** — only Gold + Rainbow qualify (2 variants); low value vs.
+  the per-pet modal + Missing-only filter. Revisit if wanted.
 
 ## [0.5.9] — 2026-05-17
 

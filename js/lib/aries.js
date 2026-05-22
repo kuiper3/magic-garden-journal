@@ -1,7 +1,8 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/lib/aries.js
-// v0.8.0 — sourced entirely from mg-data.json
+// v0.9.0 — sourced entirely from mg-data.json
 // All constants verified against live API dump.
+// 0.9.0: added composedPetSpriteUrl + PET_SPRITE_KEY for the Pets page.
 // ═══════════════════════════════════════════════
 
 import { get as cacheGet, clearAll as cacheClearAll } from './cache.js';
@@ -265,6 +266,33 @@ export function composedSpriteUrl(cropKey, variant, _tallIgnored = false) {
     return `${BASE}/assets/sprites/composed?key=${encodeURIComponent(key)}`;
   }
   return `${BASE}/assets/sprites/composed?key=${encodeURIComponent(key)}&mutations=${MUTATION_API_NAME[variant]}`;
+}
+
+// ── Pet composed sprite key map ───────────────
+// Most pet API keys match their sprite filename directly, so the composed stem is
+// derived from each pet's own sprite URL at runtime (see petSpriteStem).
+// Add an override here ONLY if a specific pet's Gold/Rainbow composed sprite 404s.
+// Source: mg-data.json pets[key].sprite stems.
+
+export const PET_SPRITE_KEY = {};
+
+// Derive the composed-endpoint stem from a pet object.
+// Prefers an explicit PET_SPRITE_KEY override, then the filename of the pet's
+// sprite URL (e.g. '.../pets/SnowFox.png' → 'SnowFox'), then the raw API key.
+export function petSpriteStem(pet) {
+  if (PET_SPRITE_KEY[pet.key]) return PET_SPRITE_KEY[pet.key];
+  const file = String(pet.sprite ?? '').split('?')[0].split('/').pop();
+  if (file) return file.replace(/\.[^.]+$/, '');
+  return pet.key;
+}
+
+// Pets only mutate into Gold / Rainbow. Normal and MaxWeight use the base sprite.
+// Endpoint shape mirrors crops: sprite/pet/<stem>[&mutations=Gold|Rainbow].
+export function composedPetSpriteUrl(pet, variant) {
+  const key = `sprite/pet/${petSpriteStem(pet)}`;
+  const mut = MUTATION_API_NAME[variant];
+  if (!mut) return `${BASE}/assets/sprites/composed?key=${encodeURIComponent(key)}`;
+  return `${BASE}/assets/sprites/composed?key=${encodeURIComponent(key)}&mutations=${mut}`;
 }
 
 // ── Static crop data ──────────────────────────

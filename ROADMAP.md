@@ -13,14 +13,18 @@ Scaffold, Supabase auth, AriesMod cache, plants grid, variant modal.
 Conditions grid, list view, Aries-style cards, composed variant sprites,
 all stats from wiki, acquisition badges, upsert fix, tab state fix. **Done at 0.5.9.**
 
-### 0.6.0 — Pets page
-- 23 pets grid, sorted by egg type (Common → Mythical)
-- Same Seed→Egg→Pet stage layout (egg sprite → hatched pet sprite)  
+### ✅ 0.6.0 — Pets page *(shipped 2026-05-21)*
+- 23-pet grid sorted by cheapest egg price (Egg mode) or A–Z
+- Egg → Pet stage layout (egg sprite → hatched pet sprite)
 - 4-variant modal: Normal, Gold, Rainbow, MaxWeight
-- Pet detail: diet crops, innate abilities with trigger types, hours to mature
-- Conditions tab: Gold and Rainbow pet variants
-- **Owned Pets sub-tab**: track individual pets (name, weight, current/max strength)
-- Done when: Pets tab feels as complete as Plants
+- Pet detail: diet crops, innate abilities (trigger + weighted %), hours to mature
+- No schema change — `item_type='pet'` reuses `journal_entries`
+
+### 0.6.1 — Pets, part 2
+- **Owned Pets sub-tab**: track individual pets (name, weight, current/max strength).
+  Needs a new Supabase table (`owned_pets`) — discovery grid does not cover instances.
+- Pet Conditions tab (Gold / Rainbow) — optional; low value, revisit on demand.
+- Done when: Pets tab feels as complete as Plants.
 
 ### 0.7.0 — Polish
 - Mobile bottom nav, touch targets ≥ 44px, iOS safe-area

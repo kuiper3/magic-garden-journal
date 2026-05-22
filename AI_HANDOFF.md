@@ -1,7 +1,7 @@
 # AI Handoff — Magic Garden Journal
 
-> **Internal doc version:** `0.4.0` · **Last updated:** 2026-05-17
-> **Project version:** `0.5.9`
+> **Internal doc version:** `0.5.0` · **Last updated:** 2026-05-21
+> **Project version:** `0.6.0`
 
 ---
 
@@ -10,8 +10,8 @@
 - **Owner:** Shawn (GitHub: `kuiper3`)
 - **Repo:** https://github.com/kuiper3/magic-garden-journal
 - **Live:** https://magic-garden-journal.vercel.app
-- **Current version:** `0.5.9` — Plants page complete, Pets stub
-- **Next milestone:** `0.6.0` — Pets page
+- **Current version:** `0.6.0` — Plants + Pets discovery pages complete
+- **Next milestone:** `0.6.1` — Owned Pets sub-tab (new `owned_pets` table)
 
 ---
 
@@ -37,7 +37,7 @@ api/config.js               Vercel fn — exposes public Supabase env vars
 css/main.css                Auth gate, shared vars
 css/nav.css                 Sidebar + mobile bottom bar + version tag
 css/plants.css              Full plants page (cards, modal, conditions, list)
-css/pets.css                Stub — 0.6.0
+css/pets.css                Pets page — diet chips, ability list, grids (loads w/ plants.css)
 js/app.js                   Router, nav, auth bootstrap, version string
 js/lib/
   aries.js                  ALL constants + API client (single source of truth)
@@ -50,7 +50,9 @@ js/pages/
   plants-grid.js            buildCard(), buildRow(), filterPlants()
   plants-modal.js           Modal, Check/Clear All, upsert toggle, variant tiles
   plants-conditions.js      Conditions grid — clickable, opens plant modal
-  pets.js                   Stub — 0.6.0
+  pets.js                   Orchestrator — grid, Egg/A–Z sort, modal, progress
+  pets-grid.js              buildPetCard(), buildPetRow(), filterPets()
+  pets-modal.js             Modal — egg, diet chips, abilities, 4 variant tiles
 index.html                  Shell only
 package.json                type:module, version 0.5.9
 ```
@@ -139,22 +141,48 @@ tabs, sort, view, and filter buttons correctly reflect state on re-mount.
 7. **Inline comments eat closing braces** — `{ return x; // comment }` is broken JS.
    Always put the `}` on its own line when a comment is present.
 8. **`type: "module"` in package.json** — suppresses Vercel ESM→CJS warning for api/config.js
+9. **Pet composed sprites** — derive the stem from `pet.sprite`'s filename, not the API
+   key. `petSpriteStem()` strips the `?v=` query + extension. `PET_SPRITE_KEY` is an
+   override map only (empty unless a specific pet's Gold/Rainbow sprite 404s).
+10. **Pet display names** — keys are PascalCase; `petDisplayName()` inserts spaces
+    (`WhiteCaribou` → "White Caribou"). Prefer an API `name` field if one ever appears.
 
 ---
 
-## 8. Pets page (0.6.0) — known from mg-data.json
+## 8. Pets page (0.6.0) — shipped
 
-- 23 pets: Worm, Snail, Bee, Chicken, Bunny, Dragonfly, Pig, Cow, Turkey, Squirrel,
-  Turtle, Goat, SnowFox, Stoat, WhiteCaribou, Pony, Sheep, Horse, Ostrich, FireHorse,
-  Butterfly, Peacock, Capybara
-- Fields: `sprite`, `rarity`, `hoursToMature`, `diet` (array of crop keys),
-  `innateAbilityWeights` (map of ability key → weight)
-- Egg types: CommonEgg, UncommonEgg, RareEgg, LegendaryEgg, SnowEgg, DawnEgg,
-  HorseEgg, MythicalEgg, WinterEgg (9 total)
-- Pet composed sprites: `sprite/pet/<PetName>&mutations=Gold` etc.
-- Modal will show: diet crops, innate abilities with trigger types, egg source, hours to mature
-- "Owned Pets" sub-tab: track individual pets (name, weight, abilities)
-- 4 variants: Normal, Gold, Rainbow, MaxWeight
+- **Data:** `getPetsSorted()` in `aries.js` returns pets keyed from `/data/pets`,
+  each annotated with `eggName` + `eggPrice` (cheapest egg whose `faunaSpawnWeights`
+  includes the pet). Default sort = egg price; A–Z re-sorts by display name.
+- **Sprites:** `composedPetSpriteUrl(pet, variant)` — Normal/MaxWeight use the base
+  `pet.sprite`; Gold/Rainbow hit `sprite/pet/<stem>&mutations=<Gold|Rainbow>`.
+  `<stem>` is parsed from the pet's own `sprite` URL (`petSpriteStem`), so no
+  hardcoded key map is needed. `PET_SPRITE_KEY` exists as an override only.
+- **Modal** shows: Egg → Pet stages, egg source + price, rarity, hours to mature,
+  diet (crop chips — sprites pulled from cached `/data/plants`), innate abilities
+  (name + trigger + weighted % share + description from `/data/abilities`), and the
+  4 variant tiles. Tile toggles upsert/delete `journal_entries` with `item_type='pet'`.
+- **4 variants:** Normal, Gold, Rainbow, MaxWeight (`PET_VARIANTS`).
+- **No schema migration** — `item_type='pet'` was already in the CHECK constraint.
+
+### Deferred to 0.6.1
+- **Owned Pets sub-tab** — individual instances (name, weight, abilities). Does NOT
+  fit `journal_entries` (one row per *discovery*, not per *instance*). Needs a new
+  table, e.g.:
+  ```sql
+  create table public.owned_pets (
+    id         uuid primary key default gen_random_uuid(),
+    user_id    uuid not null references auth.users(id) on delete cascade,
+    pet_key    text not null,         -- API key, e.g. 'SnowFox'
+    nickname   text,
+    weight_kg  numeric,
+    variant    text,                  -- Normal | Gold | Rainbow
+    abilities  jsonb,                 -- chosen/rolled abilities
+    created_at timestamptz not null default now()
+  );
+  -- RLS: all ops where auth.uid() = user_id
+  ```
+- **Pet Conditions tab** — only Gold + Rainbow qualify; deferred (low value).
 
 ---
 
