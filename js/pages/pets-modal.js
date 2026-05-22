@@ -3,7 +3,7 @@
 // v0.6.0 — pet detail: egg, diet, abilities, variants
 // ═══════════════════════════════════════════════
 
-import { PET_VARIANTS, composedPetSpriteUrl, ABILITY_STATIC_DATA } from '../lib/aries.js';
+import { PET_VARIANTS, composedPetSpriteUrl, ABILITY_STATIC_DATA, PET_FEED_BASE, FEED_WEATHER_MULT, FEED_COL_MULT } from '../lib/aries.js';
 import { getSupabase } from '../lib/supabase.js';
 import { petDisplayName, fmtHours } from './pets-grid.js';
 
@@ -53,25 +53,92 @@ export function openPetModal(pet, ctx, discovered, user, onToggle) {
        </div>`
     : `<div class="stage"><span class="stage-img stage-missing">·</span><span class="stage-lbl">${label}</span></div>`;
 
-  // ── Diet chips ──
+  // ── Diet chips with feeding breakdown ──
   const diet = Array.isArray(pet.diet) ? pet.diet : [];
+  const feedBase = PET_FEED_BASE[pet.key] ?? {};
+  const WEATHERS = ['Normal','Wet/Chill','Thunder','Frozen'];
+  const COL_LABELS = ['Normal','Wet','Thunderstruck','Gold','Rainbow'];
+
   const dietChips = diet.length
     ? diet.map(cropKey => {
-        const crop = cropLookup[cropKey] ?? {};
-        const cName = crop.name ?? prettify(cropKey);
-        const cImg  = crop.sprite ?? null;
-        const img = cImg
+        const crop   = cropLookup[cropKey] ?? {};
+        const cName  = crop.name ?? prettify(cropKey);
+        const cImg   = crop.sprite ?? null;
+        const img    = cImg
           ? `<img src="${cImg}" alt="${cName}" loading="lazy" onerror="this.style.display='none'">`
           : '';
-        return `<span class="diet-chip" title="${cName}">${img}<span class="diet-chip-lbl">${cName}</span></span>`;
+        const base = feedBase[cropKey];
+        const hasData = base != null;
+
+        // Build the feeding mini-table if we have a base value
+        const feedRows = hasData ? WEATHERS.map((w, wi) => {
+          const wm = [1,2,5,6][wi];
+          const cells = FEED_COL_MULT.map(cm => {
+            const v = Math.min(100, +(base * (wm + cm - 1)).toFixed(1));
+            const cls = v >= 100 ? 'feed-cell cap' : v >= 70 ? 'feed-cell hi' : v >= 30 ? 'feed-cell mid' : 'feed-cell';
+            return `<td class="${cls}">${v}%</td>`;
+          }).join('');
+          const wLabel = w.replace('/','<br>');
+          return `<tr><th>${wLabel}</th>${cells}</tr>`;
+        }).join('') : '';
+
+        const feedBlock = hasData ? `
+          <div class="feed-table-wrap">
+            <table class="feed-table">
+              <thead><tr>
+                <th></th>
+                <th title="Normal crop">N</th>
+                <th title="Wet/Thunderstruck tier">T2</th>
+                <th title="Frozen/Gold tier">T3</th>
+                <th title="Dawnbound tier">T4</th>
+                <th title="Rainbow/Max tier">T5</th>
+              </tr></thead>
+              <tbody>${feedRows}</tbody>
+            </table>
+            <p class="feed-note">Hunger recovery % · tiers are crop mutation levels</p>
+          </div>` : `<p class="feed-no-data">Hunger data not yet mapped for this crop</p>`;
+
+        return `
+          <details class="diet-chip-detail">
+            <summary class="diet-chip">
+              ${img}<span class="diet-chip-lbl">${cName}</span>
+              ${hasData ? `<span class="diet-base-pct">${base}%</span>` : ''}
+            </summary>
+            ${feedBlock}
+          </details>`;
       }).join('')
     : `<span class="modal-empty-note">No diet data</span>`;
 
   // ── Abilities — collapsible rows with wiki proc rates + effects ──
-  // Trigger types like 'Continuous' are redundant (means "always active") — skip them.
+  // 'Continuous' / 'Passive' triggers are implicit — omit them as redundant.
   const SKIP_TRIGGERS = new Set(['continuous','passive','always','always active','permanent']);
   const weights   = pet.innateAbilityWeights ?? {};
   const abEntries = Object.entries(weights);
+
+  function buildAbilityStatChips(stat) {
+    if (!stat || !stat.type) return '';
+    const chips = [];
+    if (stat.type === 'passive') {
+      chips.push(`<span class="ability-stat passive">Always active</span>`);
+    } else if (stat.type === 'perMin') {
+      // Formula: rate × STR / min. Show formula; exact value calculated in Owned Pets.
+      const rateStr = Number.isInteger(stat.rate) ? stat.rate : stat.rate.toFixed(2).replace(/\.?0+$/, '');
+      chips.push(`<span class="ability-stat"><span class="ability-stat-lbl">Chance/min</span>${rateStr} × STR</span>`);
+    } else if (stat.type === 'prob') {
+      chips.push(`<span class="ability-stat"><span class="ability-stat-lbl">Chance</span>${stat.rate}% × STR</span>`);
+    } else if (stat.type === 'charge') {
+      chips.push(`<span class="ability-stat"><span class="ability-stat-lbl">Charge time</span>${stat.rate}s ÷ STR</span>`);
+    }
+    if (stat.effectTemplate) {
+      // effectBase present → scales with STR
+      const eff = stat.effectBase != null
+        ? `${stat.effectBase}% × STR`
+        : stat.effectTemplate;
+      chips.push(`<span class="ability-stat effect"><span class="ability-stat-lbl">Effect</span>${eff}</span>`);
+    }
+    return chips.join('');
+  }
+
   const abilityRows = abEntries.length
     ? abEntries.map(([abKey]) => {
           const ab      = abilityLookup[abKey] ?? {};
@@ -80,6 +147,7 @@ export function openPetModal(pet, ctx, discovered, user, onToggle) {
           const trigger = rawTrig && !SKIP_TRIGGERS.has(String(rawTrig).toLowerCase()) ? prettify(rawTrig) : null;
           const apiDesc = ab.description ?? ab.desc ?? '';
           const stat    = ABILITY_STATIC_DATA[abName] ?? {};
+          const chips   = buildAbilityStatChips(stat);
           return `
             <details class="ability-row">
               <summary class="ability-head">
@@ -89,12 +157,7 @@ export function openPetModal(pet, ctx, discovered, user, onToggle) {
               </summary>
               <div class="ability-body">
                 ${apiDesc ? `<p class="ability-desc">${apiDesc}</p>` : ''}
-                <div class="ability-stats-row">
-                  ${stat.passive
-                    ? `<span class="ability-stat passive">Always active</span>`
-                    : stat.procRate ? `<span class="ability-stat"><span class="ability-stat-lbl">Proc</span>${stat.procRate}</span>` : ''}
-                  ${stat.effect ? `<span class="ability-stat effect"><span class="ability-stat-lbl">Effect</span>${stat.effect}</span>` : ''}
-                </div>
+                ${chips ? `<div class="ability-stats-row">${chips}</div>` : ''}
               </div>
             </details>`;
         }).join('')
