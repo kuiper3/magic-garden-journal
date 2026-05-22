@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/pages/pets-grid.js
-// v0.6.0 — Egg → Pet card layout (mirrors plants-grid)
+// v0.6.1 — pet hero card (just the pet); list + filter
 // ═══════════════════════════════════════════════
 
 import { PET_VARIANTS } from '../lib/aries.js';
@@ -48,20 +48,12 @@ export function buildPetCard(pet, discovered, eggLookup) {
   const { key } = pet;
   const name    = petDisplayName(pet);
   const egg     = eggLookup?.[pet.eggName] ?? null;
-  const eggImg  = egg?.sprite ?? null;
   const petImg  = pet.sprite ?? null;
   const eggPrice = egg?.coinPrice ?? (pet.eggPrice !== 9999 ? pet.eggPrice : null);
   const disc    = discovered.get(key)?.size ?? 0;
   const total   = PET_VARIANTS.length;
   const pct     = Math.round((disc / total) * 100);
   const done    = disc >= total;
-
-  const stage = (src, label) => src
-    ? `<div class="stage">
-         <img class="stage-img" src="${src}" alt="${label}" loading="lazy" onerror="this.style.opacity='0.2'">
-         <span class="stage-lbl">${label}</span>
-       </div>`
-    : `<div class="stage"><span class="stage-img stage-missing">·</span><span class="stage-lbl">${label}</span></div>`;
 
   const eggRow = `<div class="card-row"><span class="card-row-lbl">${coinIconImg()}Egg</span>`
     + `<span class="card-val${eggPrice == null ? ' muted' : ''}">${eggPrice != null ? fmtCoinValue(eggPrice) : '—'}</span></div>`;
@@ -73,10 +65,10 @@ export function buildPetCard(pet, discovered, eggLookup) {
     <div class="pet-card${done ? ' complete' : ''}" data-pet-key="${key}">
       <div class="card-rarity-wrap">${rarityIcon(pet.rarity)}</div>
       <div class="card-name">${name}</div>
-      <div class="stages">
-        ${stage(eggImg, 'Egg')}
-        <span class="stage-arr">→</span>
-        ${stage(petImg, 'Pet')}
+      <div class="pet-hero">
+        ${petImg
+          ? `<img class="pet-hero-img" src="${petImg}" alt="${name}" loading="lazy" onerror="this.style.opacity='0.2'">`
+          : `<span class="pet-hero-missing">🐾</span>`}
       </div>
       <div class="card-stats">
         ${eggRow}

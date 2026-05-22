@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   Magic Garden Journal — pets.css  v0.6.0
+   Magic Garden Journal — pets.css  v0.6.1
    Builds on plants.css (loaded alongside). Only
    pet-specific structure + the diet / ability
    sections live here.
@@ -45,9 +45,17 @@
 .pet-row:hover { border-color: rgba(90,154,110,0.4); transform: translateX(2px); }
 .pet-row.complete { border-color: rgba(212, 168, 83, 0.5); }
 
-/* Pet stage layout has 2 stages (Egg → Pet) — let sprites breathe a bit more */
-.pet-card .stages { gap: 0.5rem; }
-.pet-card .stage-img { width: 44px; height: 44px; }
+/* Pet card hero image (card shows just the pet) */
+.pet-hero {
+  display: flex; align-items: center; justify-content: center;
+  height: 84px; margin-bottom: 0.85rem;
+  background: rgba(0,0,0,0.2); border-radius: 8px;
+}
+.pet-hero-img {
+  width: 68px; height: 68px;
+  object-fit: contain; image-rendering: crisp-edges;
+}
+.pet-hero-missing { font-size: 2rem; opacity: 0.25; }
 
 /* ── Modal: 3-up stats grid (Egg / Mature / Rarity) ── */
 .pet-stats-grid { grid-template-columns: repeat(3, 1fr); }

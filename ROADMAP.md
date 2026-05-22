@@ -20,7 +20,13 @@ all stats from wiki, acquisition badges, upsert fix, tab state fix. **Done at 0.
 - Pet detail: diet crops, innate abilities (trigger + weighted %), hours to mature
 - No schema change — `item_type='pet'` reuses `journal_entries`
 
-### 0.6.1 — Pets, part 2
+### ✅ 0.6.1 — Pets: pet-only cards, Egg→Pet modal, Mutations tab *(shipped 2026-05-21)*
+- Card shows just the pet; modal shows Egg → Pet; Gold/Rainbow Mutations tab + Missing filter
+
+### 0.6.2 — Eggs + feeding
+- Eggs Explorer tab (live faunaSpawnWeights); per-pet feeding values (formula solved, see handoff §11)
+
+### 0.6.3 — Owned Pets
 - **Owned Pets sub-tab**: track individual pets (name, weight, current/max strength).
   Needs a new Supabase table (`owned_pets`) — discovery grid does not cover instances.
 - Pet Conditions tab (Gold / Rainbow) — optional; low value, revisit on demand.

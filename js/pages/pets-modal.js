@@ -132,9 +132,9 @@ export function openPetModal(pet, ctx, discovered, user, onToggle) {
       </div>
 
       <div class="modal-stages">
-        ${stage(eggImg, 'Egg')}
+        ${stage(eggImg, eggName)}
         <span class="stage-arr">→</span>
-        ${stage(petImg, 'Pet')}
+        ${stage(petImg, name)}
       </div>
 
       <div class="modal-info-block">

@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/app.js
-// v0.4.1 — router + nav render (v0.6.0 nav string)
+// v0.4.1 — router + nav render (v0.6.1 nav string)
 // ═══════════════════════════════════════════════
 
 import { initAuth, getSession, signIn, signOut } from './lib/auth.js';
@@ -21,7 +21,7 @@ function renderNav() {
   const navEl = document.getElementById('nav');
   if (!navEl) return;
   navEl.innerHTML = `
-    <div class="nav-logo">Journal<span class="nav-version">v0.6.0</span></div>
+    <div class="nav-logo">Journal<span class="nav-version">v0.6.1</span></div>
     <a class="nav-link" data-route="/plants" href="/plants">
       <span class="nav-icon">🌱</span> Plants
     </a>

@@ -1,9 +1,30 @@
 # Changelog — Magic Garden Journal
 
-> **Internal doc version:** `0.5.0` · **Last updated:** 2026-05-21
+> **Internal doc version:** `0.5.1` · **Last updated:** 2026-05-21
 > Versions here track the **project** (package.json), not this document.
 
 ---
+
+## [0.6.1] — 2026-05-21 *(Pets: card + mutations tab)*
+
+### Changed
+- **Pet card now shows just the pet** (single hero sprite) — the egg was dropped
+  from the card. The Egg → Pet flow lives in the modal instead.
+- **Modal stages relabeled** to read `<Egg name> → <Pet name>`
+  (e.g. "Snow Egg" → "Snow Fox") instead of generic "Egg"/"Pet".
+
+### Added
+- **Mutations tab** on the Pets page (`pets-conditions.js`), mirroring the crops
+  Conditions tab: Gold / Rainbow sub-tabs, Show all / Missing-only filter, per-variant
+  progress, grid of all pets with composed mutated sprites. Click opens the pet modal.
+  `pets.js` gained a Pets | Mutations tab group.
+
+### Deferred (next session) — head start in AI_HANDOFF §10–11
+- **Eggs Explorer tab** — per egg, list spawnable pets + %. Uses live
+  `/data/eggs` `faunaSpawnWeights`; no manual data needed.
+- **Per-pet feeding / hunger values** — formula reverse-engineered from the in-game
+  feeding tables (see handoff §11). Reduces transcription to one base value per
+  (pet, crop) instead of the full mutation matrix.
 
 ## [0.6.0] — 2026-05-21 *(Pets page)*
 

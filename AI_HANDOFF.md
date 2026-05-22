@@ -1,7 +1,7 @@
 # AI Handoff — Magic Garden Journal
 
-> **Internal doc version:** `0.5.0` · **Last updated:** 2026-05-21
-> **Project version:** `0.6.0`
+> **Internal doc version:** `0.5.1` · **Last updated:** 2026-05-21
+> **Project version:** `0.6.1`
 
 ---
 
@@ -10,8 +10,8 @@
 - **Owner:** Shawn (GitHub: `kuiper3`)
 - **Repo:** https://github.com/kuiper3/magic-garden-journal
 - **Live:** https://magic-garden-journal.vercel.app
-- **Current version:** `0.6.0` — Plants + Pets discovery pages complete
-- **Next milestone:** `0.6.1` — Owned Pets sub-tab (new `owned_pets` table)
+- **Current version:** `0.6.1` — Pets: pet-only cards, Egg→Pet modal, Mutations tab
+- **Next milestone:** `0.6.2` — Eggs Explorer tab + per-pet feeding values (see §10–11)
 
 ---
 
@@ -52,7 +52,8 @@ js/pages/
   plants-conditions.js      Conditions grid — clickable, opens plant modal
   pets.js                   Orchestrator — grid, Egg/A–Z sort, modal, progress
   pets-grid.js              buildPetCard(), buildPetRow(), filterPets()
-  pets-modal.js             Modal — egg, diet chips, abilities, 4 variant tiles
+  pets-modal.js             Modal — Egg→Pet stages, diet chips, abilities, 4 variant tiles
+  pets-conditions.js        Mutations tab — Gold/Rainbow grid, Missing filter
 index.html                  Shell only
 package.json                type:module, version 0.5.9
 ```
@@ -193,3 +194,45 @@ tabs, sort, view, and filter buttons correctly reflect state on re-mount.
 3. Ask Shawn what milestone we're on and what's blocking.
 4. Never assume codebase state — ask to paste or reference GitHub.
 5. Reference `mg-data.json` before hardcoding any game constant.
+
+---
+
+## 10. Eggs Explorer tab (planned — 0.6.2)
+
+Goal: a tab (Ares-Explorer style) listing each egg and the pets it can hatch, with
+spawn %. **No manual data** — it comes from the live API.
+
+- Source: `/data/eggs` → `eggs[eggKey].faunaSpawnWeights` = `{ petKey: weight }`.
+- Spawn % for a pet in an egg = `weight / sum(all weights in that egg) * 100`.
+- Egg sprite + coin price already in the egg object (`sprite`, `coinPrice`).
+- Reuse the `getPetsSorted()` fetch; build per-egg cards → expandable pet rows.
+- Egg order (cheapest → priciest, or fixed): Common, Uncommon, Rare, Legendary,
+  Snow, Dawn, Horse, Mythical, Winter (9 — confirm against API keys).
+
+## 11. Per-pet feeding / hunger (planned — priority) — FORMULA SOLVED
+
+Shawn supplied 7 in-game feeding tables (one per rarity group: Common, Uncommon,
+Rare, Legendary, Snow, Horse, Mythical). Each pet block = its diet crops down the
+left, with a value matrix. **The matrix is a formula, not 20 independent numbers:**
+
+```
+hunger%(pet, crop, weather, colMut) = base(pet,crop) × (weatherMult + colMult − 1)
+                                       , then capped at 100%
+```
+
+- **weatherMult** (the row labels): Normal ×1 · Wet/Chill ×2 · Thunder ×5 · Frozen ×6
+- **colMult** (the 5 columns, left→right): ×1 · ×4 · ×6 · ×7 · ×10
+  (columns are crop-mutation tiers — CONFIRM exact mutation identities next session)
+- Combine **additively** in multiplier space (verified, Worm+Carrot, base 4.0%):
+  - Wet × col2  → 4×(2+4−1)=20.0 ✓
+  - Thunder × col3 → 4×(5+6−1)=40.0 ✓
+  - Frozen × col5 → 4×(6+10−1)=60.0 ✓
+- Magenta "100%" cells = the cap (pet fully fed).
+
+**Implication:** next session only needs the **base value** = the top-left
+(Normal weather, column 1) cell for each (pet, crop) pair — ~2–4 numbers per pet,
+not the whole grid. Plan: add `PET_FEED_BASE = { petKey: { cropKey: basePct } }` to
+aries.js, a `feedHunger(base, weather, colMut)` helper, and surface it in the modal's
+Diet section (each diet chip → its base %, with a small weather/mutation toggle).
+TODO: verify the column-mutation identities + that ×1/4/6/7/10 holds across all
+rarities (spot-checked Common + Snow; held).

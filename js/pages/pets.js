@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/pages/pets.js
-// v0.6.0 — orchestrator: grid, sort, modal, progress
+// v0.6.1 — orchestrator: tabs (Pets/Mutations), sort, modal, progress
 // ═══════════════════════════════════════════════
 
 import {
@@ -9,11 +9,13 @@ import {
 import { getSupabase } from '../lib/supabase.js';
 import { buildPetCard, buildPetRow, filterPets, petDisplayName } from './pets-grid.js';
 import { openPetModal, closePetModal } from './pets-modal.js';
+import { renderPetConditions } from './pets-conditions.js';
 
 // ── State (persists across navigation, mirrors plants.js) ──
 let _pets = [], _user = null;
 let _eggLookup = {}, _cropLookup = {}, _abilityLookup = {};
 let _discovered = new Map();
+let _activeTab   = 'pets';    // 'pets' | 'mutations'
 let _viewMode    = 'cards';   // 'cards' | 'list'
 let _sortMode    = 'egg';     // 'egg'   | 'az'
 let _missingOnly = false;
@@ -27,13 +29,16 @@ export function render(container) {
     <link rel="stylesheet" href="css/pets.css">
     <div class="plants-toolbar">
       <div class="toolbar-row toolbar-top">
-        <div class="pets-title">🐾 Pets</div>
+        <div class="tab-group">
+          <button class="tab-btn${_activeTab === 'pets' ? ' active' : ''}" data-tab="pets">🐾 Pets</button>
+          <button class="tab-btn${_activeTab === 'mutations' ? ' active' : ''}" data-tab="mutations">✨ Mutations</button>
+        </div>
         <div class="overall-progress-wrap">
           <div class="overall-bar-track"><div class="overall-bar-fill" id="pet-overall-bar"></div></div>
           <span class="overall-text" id="pet-overall-text">—</span>
         </div>
       </div>
-      <div class="toolbar-row toolbar-controls">
+      <div class="toolbar-row toolbar-controls" id="pet-controls"${_activeTab === 'mutations' ? ' style="display:none"' : ''}>
         <div class="search-wrap">
           <span class="search-icon">🔍</span>
           <input type="text" id="pet-search" placeholder="Search…" autocomplete="off" value="${_search}">
@@ -105,6 +110,16 @@ function applySort() {
 // ── Toolbar binding ───────────────────────────
 
 function bindToolbar() {
+  document.querySelector('.tab-group')?.addEventListener('click', e => {
+    const btn = e.target.closest('.tab-btn');
+    if (!btn || btn.dataset.tab === _activeTab) return;
+    _activeTab = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === _activeTab));
+    const controls = document.getElementById('pet-controls');
+    if (controls) controls.style.display = _activeTab === 'pets' ? '' : 'none';
+    renderCurrentView();
+  });
+
   document.querySelector('.sort-toggle')?.addEventListener('click', e => {
     const btn = e.target.closest('.sort-btn');
     if (!btn || btn.dataset.sort === _sortMode) return;
@@ -134,6 +149,7 @@ function bindToolbar() {
   });
 
   document.getElementById('pets-content')?.addEventListener('click', e => {
+    if (_activeTab !== 'pets') return;
     const card = e.target.closest('[data-pet-key]');
     if (!card) return;
     const pet = _pets.find(p => p.key === card.dataset.petKey);
@@ -150,6 +166,10 @@ function ctx() {
 function renderCurrentView() {
   const content = document.getElementById('pets-content');
   if (!content) return;
+  if (_activeTab === 'mutations') {
+    renderPetConditions(content, _pets, _discovered, pet => openPetModal(pet, ctx(), _discovered, _user, onModalToggle));
+    return;
+  }
   const visible = filterPets(_pets, _discovered, { searchQuery: _search, missingOnly: _missingOnly });
   if (!visible.length) {
     content.innerHTML = `<div class="state-empty">No pets match your filters.</div>`;
@@ -169,7 +189,8 @@ function onModalToggle(petKey, variantKey, wasDiscovered) {
   const set = _discovered.get(petKey);
   if (variantKey) { wasDiscovered ? set.delete(variantKey) : set.add(variantKey); }
   updateOverallProgress();
-  refreshCardInGrid(petKey);
+  if (_activeTab === 'mutations') renderCurrentView();
+  else refreshCardInGrid(petKey);
 }
 
 function refreshCardInGrid(petKey) {
