@@ -440,30 +440,37 @@ export const ABILITY_STATIC_DATA = {
 export const PET_FEED_BASE = {
   // Common
   Worm:        { Carrot:4.0, Strawberry:2.8, Tomato:5.4, Apple:14.6, Cactus:62.0 },
-  Snail:       { Blueberry:2.3, Tomato:2.7, Corn:3.6 },
-  Bee:         { Strawberry:0.9, Blueberry:1.5 },
+  Snail:       { Blueberry:2.3, Tomato:2.7, Corn:3.6, Lily:72.7 },
+  Bee:         { Strawberry:0.9, Blueberry:1.5, Lily:72.7 },
   // Uncommon
+  // Chicken: leafy crop (10.3%) key unconfirmed — verify cropKey against pet diet API
   Chicken:     { Corn:1.2, Watermelon:90.3 },
   Bunny:       { Carrot:2.7, Strawberry:1.9, Blueberry:3.1, Tomato:9.7 },
+  // Dragonfly: diet unclear from OCR — add once cropKey known
   Dragonfly:   {},
   // Rare
   Pig:         { Watermelon:5.4, Pumpkin:7.4 },
-  Cow:         { Onion:1.2, Banana:7.0, Grape:24.0 },
+  // Cow: round bulb sprite = Beet (not Onion — no Onion crop key exists)
+  Cow:         { Beet:1.2, Banana:7.0, Grape:24.0 },
   Turkey:      { Corn:6.0, Pumpkin:7.2 },
   // Legendary
   Squirrel:    { Pumpkin:24.7, Banana:11.7, Grape:83.3 },
   Turtle:      { Watermelon:2.7, Grape:6.0 },
-  Goat:        { Pumpkin:18.5, Onion:1.5, Pepper:7.2 },
+  Goat:        { Pumpkin:18.5, Beet:1.5, Pepper:7.2, Lily:24.4 },
   // Snow
   SnowFox:     { Cactus:39.4, Pumpkin:25.0, Grape:89.3 },
   Stoat:       { Banana:17.5, Pepper:72.2 },
-  WhiteCaribou:{ Grape:20.0 },
+  WhiteCaribou:{ Grape:20.0, Lily:16.3 },
   // Horse
-  Horse:       { Onion:7.6 },
-  Pony:        { Cactus:22.1, Pumpkin:14.0 },
-  Ostrich:     { DragonFruit:12.3, Pepper:35.0 },
+  // Horse: round bulb = Beet; Pear confirmed; blue flower = Delphinium (verify)
+  Horse:       { Beet:7.6, Pear:6.3 },
+  Pony:        { Cactus:22.1, Pumpkin:14.0, Delphinium:40.0 },
+  // Ostrich: Poinsettia base=15.0 — confirm key 'Poinsettia' in API
+  Ostrich:     { Poinsettia:15.0, DragonFruit:12.3, Pepper:35.0 },
   // Mythical
+  // Butterfly: Vanilla/wheat sprite base 4.4% — cropKey unconfirmed (Saffron? Wheat?)
   Butterfly:   { Grape:50.0, Lemon:40.0 },
+  // Peacock: diet all at 100% base or unclear — add once cropKeys known
   Peacock:     {},
   Capybara:    { Lemon:6.7, DragonFruit:16.3, Tomato:33.3 },
 };
