@@ -15,6 +15,8 @@ import { renderPetConditions } from './pets-conditions.js';
 let _pets = [], _user = null;
 let _eggLookup = {}, _cropLookup = {}, _abilityLookup = {};
 let _discovered = new Map();
+let _ownedCounts = new Map(); // petKey → count of owned instances
+let _ownedByKey  = new Map(); // petKey → [{ nickname, variant, weight_kg }]
 let _activeTab   = 'pets';    // 'pets' | 'mutations'
 let _viewMode    = 'cards';   // 'cards' | 'list'
 let _sortMode    = 'egg';     // 'egg'   | 'az'
@@ -67,9 +69,10 @@ export async function init() {
     const { data: { user } } = await supabase.auth.getUser();
     _user = user;
 
-    const [pets, eggs, plants, abilities, entries] = await Promise.all([
+    const [pets, eggs, plants, abilities, entries, owned] = await Promise.all([
       getPetsSorted(), fetchEggs(), fetchPlants(), fetchAbilities(),
       fetchPetEntries(supabase, user),
+      fetchOwnedSummary(supabase, user),
     ]);
 
     _pets          = pets;
@@ -77,6 +80,8 @@ export async function init() {
     _cropLookup    = buildCropLookup(plants);
     _abilityLookup = abilities ?? {};
     _discovered    = buildDiscoveredMap(entries);
+    _ownedCounts   = owned.counts;
+    _ownedByKey    = owned.byKey;
 
     applySort();
     updateOverallProgress();
@@ -91,8 +96,10 @@ export async function init() {
 
 export function destroy() {
   closePetModal();
+  closeOwnedPops();
   _pets = []; _eggLookup = {}; _cropLookup = {}; _abilityLookup = {};
   _discovered = new Map(); _user = null;
+  _ownedCounts = new Map(); _ownedByKey = new Map();
 }
 
 // ── Sorting ───────────────────────────────────
@@ -150,11 +157,80 @@ function bindToolbar() {
 
   document.getElementById('pets-content')?.addEventListener('click', e => {
     if (_activeTab !== 'pets') return;
+
+    // Owned-count badge: toggle the inline instance popover; don't open the modal.
+    const badge = e.target.closest('.owned-badge');
+    if (badge) {
+      e.stopPropagation();
+      toggleOwnedPop(badge);
+      return;
+    }
+    // A click anywhere else closes any open popover.
+    closeOwnedPops();
+
     const card = e.target.closest('[data-pet-key]');
     if (!card) return;
     const pet = _pets.find(p => p.key === card.dataset.petKey);
     if (pet) openPetModal(pet, ctx(), _discovered, _user, onModalToggle);
   });
+}
+
+// ── Owned-instance popover (lightweight, built from preloaded data) ──
+
+let _onPopDismiss = null;
+let _onPopKey = null;
+
+function closeOwnedPops() {
+  document.querySelectorAll('.owned-pop').forEach(el => el.remove());
+  document.querySelectorAll('.owned-badge.open').forEach(b => b.classList.remove('open'));
+  if (_onPopDismiss) {
+    window.removeEventListener('scroll', _onPopDismiss, true);
+    window.removeEventListener('resize', _onPopDismiss, true);
+    _onPopDismiss = null;
+  }
+  if (_onPopKey) {
+    document.removeEventListener('keydown', _onPopKey, true);
+    _onPopKey = null;
+  }
+}
+
+function toggleOwnedPop(badge) {
+  const wasOpen = badge.classList.contains('open');
+  closeOwnedPops();
+  if (wasOpen) return;
+
+  const key  = badge.dataset.ownedSpecies;
+  const list = _ownedByKey.get(key) ?? [];
+  if (!list.length) return;
+
+  const rows = list.map(i => {
+    const nick = (i.nickname && i.nickname.trim()) ? i.nickname.trim() : '(unnamed)';
+    const mut  = i.variant && i.variant !== 'Normal' ? `<span class="owned-pop-mut">${i.variant}</span>` : '';
+    const wt   = i.weight_kg != null ? `<span class="owned-pop-wt">${Number(i.weight_kg).toLocaleString(undefined, { maximumFractionDigits: 3 })} kg</span>` : '';
+    return `<div class="owned-pop-row"><span class="owned-pop-nick">${nick}</span>${mut}${wt}</div>`;
+  }).join('');
+
+  const pop = document.createElement('div');
+  pop.className = 'owned-pop';
+  pop.innerHTML = `<div class="owned-pop-head">Owned · ${list.length}</div>${rows}`;
+  document.body.appendChild(pop);
+  badge.classList.add('open');
+
+  // Anchor under the badge, clamped to the viewport.
+  const r = badge.getBoundingClientRect();
+  const w = pop.offsetWidth;
+  let left = r.left;
+  if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+  pop.style.left = `${Math.max(8, left)}px`;
+  pop.style.top  = `${r.bottom + 6}px`;
+
+  // Dismiss on escape / scroll / resize. Outside clicks within #pets-content are
+  // handled by the content click listener (it calls closeOwnedPops).
+  _onPopDismiss = () => closeOwnedPops();
+  _onPopKey = (e) => { if (e.key === 'Escape') closeOwnedPops(); };
+  document.addEventListener('keydown', _onPopKey, true);
+  window.addEventListener('scroll', _onPopDismiss, true);
+  window.addEventListener('resize', _onPopDismiss, true);
 }
 
 function ctx() {
@@ -176,9 +252,9 @@ function renderCurrentView() {
     return;
   }
   if (_viewMode === 'list') {
-    content.innerHTML = `<div class="plants-list">${visible.map(p => buildPetRow(p, _discovered, _eggLookup)).join('')}</div>`;
+    content.innerHTML = `<div class="plants-list">${visible.map(p => buildPetRow(p, _discovered, _eggLookup, _ownedCounts)).join('')}</div>`;
   } else {
-    content.innerHTML = `<div class="plants-grid">${visible.map(p => buildPetCard(p, _discovered, _eggLookup)).join('')}</div>`;
+    content.innerHTML = `<div class="plants-grid">${visible.map(p => buildPetCard(p, _discovered, _eggLookup, _ownedCounts)).join('')}</div>`;
   }
 }
 
@@ -199,8 +275,8 @@ function refreshCardInGrid(petKey) {
   const pet = _pets.find(p => p.key === petKey);
   if (!pet) return;
   el.outerHTML = _viewMode === 'list'
-    ? buildPetRow(pet, _discovered, _eggLookup)
-    : buildPetCard(pet, _discovered, _eggLookup);
+    ? buildPetRow(pet, _discovered, _eggLookup, _ownedCounts)
+    : buildPetCard(pet, _discovered, _eggLookup, _ownedCounts);
 }
 
 // ── Overall progress ──────────────────────────
@@ -224,6 +300,26 @@ async function fetchPetEntries(supabase, user) {
     .select('item_key, variant_key').eq('user_id', user.id).eq('item_type', 'pet');
   if (error) { console.warn('[pets] journal fetch failed:', error.message); return []; }
   return data ?? [];
+}
+
+// Owned-pet counts + instances for the per-species badge. Guarded: if the
+// owned_pets table hasn't been migrated yet, this returns empty maps so the
+// Pets page still works.
+async function fetchOwnedSummary(supabase, user) {
+  const empty = { counts: new Map(), byKey: new Map() };
+  if (!user) return empty;
+  const { data, error } = await supabase.from('owned_pets')
+    .select('pet_key, nickname, weight_kg, variant')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
+  if (error) { console.warn('[pets] owned summary skipped:', error.message); return empty; }
+  const counts = new Map(), byKey = new Map();
+  for (const row of data ?? []) {
+    counts.set(row.pet_key, (counts.get(row.pet_key) ?? 0) + 1);
+    if (!byKey.has(row.pet_key)) byKey.set(row.pet_key, []);
+    byKey.get(row.pet_key).push(row);
+  }
+  return { counts, byKey };
 }
 
 function buildDiscoveredMap(entries) {

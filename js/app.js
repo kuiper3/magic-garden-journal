@@ -9,6 +9,7 @@ import { initAuth, getSession, signIn, signOut } from './lib/auth.js';
 const ROUTES = {
   '/plants': () => import('./pages/plants.js'),
   '/pets':   () => import('./pages/pets.js'),
+  '/owned':  () => import('./pages/owned-pets.js'),
 };
 
 const DEFAULT_ROUTE = '/plants';
@@ -21,12 +22,15 @@ function renderNav() {
   const navEl = document.getElementById('nav');
   if (!navEl) return;
   navEl.innerHTML = `
-    <div class="nav-logo">Journal<span class="nav-version">v0.6.4</span></div>
+    <div class="nav-logo">Journal<span class="nav-version">v0.7.0</span></div>
     <a class="nav-link" data-route="/plants" href="/plants">
       <span class="nav-icon">🌱</span> Plants
     </a>
     <a class="nav-link" data-route="/pets" href="/pets">
       <span class="nav-icon">🐾</span> Pets
+    </a>
+    <a class="nav-link" data-route="/owned" href="/owned">
+      <span class="nav-icon">📋</span> Owned
     </a>
     <div class="nav-spacer"></div>
     <button class="nav-signout" id="signout-btn">Sign out</button>

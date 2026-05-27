@@ -1,0 +1,235 @@
+/* ═══════════════════════════════════════════════
+   Magic Garden Journal — css/owned-pets.css  v0.7.0
+   Owned-pet collection + add/edit form.
+   Reuses shared tokens + .modal-overlay/.modal-card/.spinner/.state-* from
+   main.css + plants.css. Dark content theme (rgba-on-dark), green accents.
+   ═══════════════════════════════════════════════ */
+
+/* ── Toolbar header ─────────────────────────── */
+.owned-page-title {
+  font-family: var(--font-display);
+  font-size: 1.3rem; font-weight: 700; color: #fff;
+  display: flex; align-items: center; gap: 0.6rem; margin: 0;
+}
+.owned-count-chip {
+  font-family: var(--font-body); font-size: 0.7rem; font-weight: 500;
+  color: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 0.2rem 0.6rem; border-radius: 999px; white-space: nowrap;
+}
+.toolbar-top { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+
+.owned-add-btn {
+  background: var(--green); color: #cfffcb;
+  border: 1px solid rgba(90,154,110,0.5); border-radius: 999px;
+  font-family: var(--font-body); font-size: 0.82rem; font-weight: 600;
+  padding: 0.45rem 1rem; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.owned-add-btn:hover { background: var(--green-light); color: #06140a; }
+
+/* ── Groups + grid ──────────────────────────── */
+.owned-group { margin-bottom: 1.6rem; }
+.owned-group-head {
+  display: flex; align-items: center; gap: 0.55rem;
+  padding-bottom: 0.5rem; margin-bottom: 0.7rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.owned-group-sprite { width: 30px; height: 30px; object-fit: contain; image-rendering: crisp-edges; }
+.owned-group-sprite.missing { display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.owned-group-name { font-size: 0.95rem; font-weight: 600; color: rgba(255,255,255,0.9); }
+.owned-group-count { font-size: 0.78rem; color: rgba(255,255,255,0.4); font-variant-numeric: tabular-nums; }
+
+.owned-grid {
+  display: grid; gap: 0.85rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+/* ── Owned card ─────────────────────────────── */
+.owned-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem; display: flex; flex-direction: column; gap: 0.75rem;
+  transition: border-color 0.15s, background 0.15s;
+}
+.owned-card:hover { border-color: rgba(255,255,255,0.16); }
+.owned-card.variant-gold    { border-color: rgba(212,168,83,0.35); }
+.owned-card.variant-rainbow { border-color: rgba(150,120,200,0.4); }
+
+.owned-card-head { display: flex; align-items: flex-start; gap: 0.7rem; }
+.owned-hero {
+  width: 52px; height: 52px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.2); border-radius: var(--radius-sm);
+}
+.owned-hero-img { width: 100%; height: 100%; object-fit: contain; image-rendering: crisp-edges; }
+.owned-hero.gold .owned-hero-img    { filter: drop-shadow(0 0 4px rgba(212,168,83,0.6)); }
+.owned-hero.rainbow .owned-hero-img { filter: drop-shadow(0 0 4px rgba(180,120,220,0.6)); }
+.owned-hero-missing { font-size: 1.5rem; opacity: 0.4; }
+
+.owned-card-id { flex: 1; min-width: 0; }
+.owned-name-line { display: flex; align-items: center; gap: 0.4rem; }
+.owned-nick {
+  font-size: 0.98rem; font-weight: 600; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.owned-name-line .card-rarity-icon { width: 16px; height: 16px; object-fit: contain; flex-shrink: 0; }
+.owned-sub-line {
+  display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;
+  margin-top: 0.2rem; font-size: 0.74rem; color: rgba(255,255,255,0.5);
+}
+.owned-species { color: rgba(255,255,255,0.55); }
+.owned-weight { color: rgba(255,255,255,0.65); font-variant-numeric: tabular-nums; }
+.owned-variant-tag {
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 0.1rem 0.4rem; border-radius: 4px;
+}
+.owned-variant-tag.variant-gold    { background: rgba(212,168,83,0.22); color: #e7c87a; }
+.owned-variant-tag.variant-rainbow { background: rgba(160,120,210,0.25); color: #d2b8ec; }
+
+.owned-card-actions { display: flex; gap: 0.25rem; flex-shrink: 0; }
+.owned-icon-btn {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.55); border-radius: 6px;
+  width: 28px; height: 28px; cursor: pointer; font-size: 0.8rem; transition: all 0.15s;
+}
+.owned-icon-btn:hover { color: #fff; background: rgba(90,154,110,0.2); }
+.owned-icon-btn.danger:hover { background: rgba(192,57,43,0.25); color: #ffb4ab; }
+
+/* ── Proc-share block ───────────────────────── */
+.owned-proc-block {
+  background: rgba(0,0,0,0.18); border-radius: var(--radius-xs);
+  padding: 0.6rem 0.7rem;
+}
+.owned-proc-title {
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: rgba(255,255,255,0.38); margin-bottom: 0.5rem;
+}
+.owned-proc-row {
+  display: grid; grid-template-columns: 1fr 70px 34px; align-items: center; gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+.owned-proc-row:last-child { margin-bottom: 0; }
+.owned-proc-name {
+  font-size: 0.76rem; color: rgba(255,255,255,0.78);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.owned-proc-bar { height: 5px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden; }
+.owned-proc-fill { height: 100%; background: var(--green-light); border-radius: 999px; transition: width 0.2s var(--ease); }
+.owned-proc-pct {
+  font-size: 0.72rem; color: rgba(255,255,255,0.6); text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.owned-proc-empty { font-size: 0.76rem; color: rgba(255,255,255,0.35); font-style: italic; margin: 0; }
+
+/* ── Empty state ────────────────────────────── */
+.owned-empty {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: 0.5rem; padding: 3.5rem 1rem;
+}
+.owned-empty-emblem { font-size: 2.6rem; opacity: 0.5; }
+.owned-empty-title { font-size: 1.1rem; font-weight: 600; color: rgba(255,255,255,0.85); margin: 0; }
+.owned-empty-sub { font-size: 0.85rem; color: rgba(255,255,255,0.45); max-width: 340px; margin: 0 0 0.8rem; line-height: 1.5; }
+
+/* ═══════════════════════════════════════════════
+   ADD / EDIT FORM
+   ═══════════════════════════════════════════════ */
+.owned-form-card { max-width: 480px; }
+.owned-form-body { padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 1.1rem; }
+.owned-form-row { display: flex; flex-direction: column; gap: 0.4rem; }
+.owned-form-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+.owned-form-preview { display: grid; grid-template-columns: 64px 1fr; gap: 0.85rem; align-items: start; }
+
+.owned-form-sprite {
+  width: 64px; height: 64px; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.22); border-radius: var(--radius-sm);
+}
+.owned-form-sprite img { width: 100%; height: 100%; object-fit: contain; image-rendering: crisp-edges; }
+.owned-form-sprite.gold img    { filter: drop-shadow(0 0 5px rgba(212,168,83,0.65)); }
+.owned-form-sprite.rainbow img { filter: drop-shadow(0 0 5px rgba(180,120,220,0.65)); }
+.owned-form-fields { display: flex; flex-direction: column; gap: 0.7rem; }
+
+.owned-field { display: flex; flex-direction: column; gap: 0.3rem; }
+.owned-field-lbl {
+  font-size: 0.66rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+  color: rgba(255,255,255,0.42);
+}
+.owned-field-opt { font-weight: 400; text-transform: none; letter-spacing: 0; color: rgba(255,255,255,0.3); }
+
+.owned-input {
+  background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius-sm); color: #fff;
+  font-family: var(--font-body); font-size: 0.86rem; padding: 0.5rem 0.7rem;
+  width: 100%; transition: border-color 0.15s, background 0.15s;
+}
+.owned-input:focus { outline: none; border-color: var(--green-light); background: rgba(0,0,0,0.35); }
+.owned-input:disabled { opacity: 0.6; cursor: not-allowed; }
+select.owned-input { appearance: none; cursor: pointer; }
+
+/* Segmented mutation control */
+.owned-seg { display: flex; gap: 0.3rem; }
+.owned-seg-btn {
+  flex: 1; background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.55); border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-size: 0.78rem; padding: 0.45rem 0.3rem;
+  cursor: pointer; transition: all 0.15s;
+}
+.owned-seg-btn:hover { color: rgba(255,255,255,0.85); }
+.owned-seg-btn.active { color: #cfffcb; background: rgba(90,154,110,0.28); border-color: rgba(90,154,110,0.55); }
+
+/* Ability weight editor */
+.owned-ability-head { display: flex; align-items: center; justify-content: space-between; }
+.owned-mini-btn {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.55); border-radius: 999px;
+  font-family: var(--font-body); font-size: 0.66rem; padding: 0.2rem 0.6rem; cursor: pointer; transition: all 0.15s;
+}
+.owned-mini-btn:hover { color: #fff; background: rgba(90,154,110,0.2); }
+.owned-ability-note { font-size: 0.72rem; color: rgba(255,255,255,0.4); margin: 0 0 0.2rem; line-height: 1.4; }
+.owned-ability-list { display: flex; flex-direction: column; gap: 0.4rem; }
+.owned-ability-edit {
+  display: grid; grid-template-columns: 1fr 74px 40px; align-items: center; gap: 0.5rem;
+}
+.owned-ability-name {
+  font-size: 0.8rem; color: rgba(255,255,255,0.8);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.owned-ability-weight { padding: 0.35rem 0.5rem; font-size: 0.8rem; text-align: right; }
+.owned-ability-pct {
+  font-size: 0.76rem; font-weight: 600; color: var(--green-light); text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Form actions */
+.owned-form-actions {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.85rem 1.1rem; border-top: 1px solid rgba(255,255,255,0.06);
+  position: sticky; bottom: 0; background: var(--bg-2);
+}
+.owned-form-spacer { flex: 1; }
+.owned-form-btn {
+  border-radius: 999px; font-family: var(--font-body); font-size: 0.82rem; font-weight: 500;
+  padding: 0.5rem 1.1rem; cursor: pointer; transition: all 0.15s; border: 1px solid transparent;
+}
+.owned-form-btn.primary { background: var(--green); color: #cfffcb; border-color: rgba(90,154,110,0.5); }
+.owned-form-btn.primary:hover { background: var(--green-light); color: #06140a; }
+.owned-form-btn.primary:disabled { opacity: 0.6; cursor: default; }
+.owned-form-btn.ghost { background: transparent; color: rgba(255,255,255,0.55); border-color: rgba(255,255,255,0.12); }
+.owned-form-btn.ghost:hover { color: #fff; border-color: rgba(255,255,255,0.25); }
+.owned-form-btn.danger { background: transparent; color: #e08070; border-color: rgba(192,57,43,0.35); }
+.owned-form-btn.danger:hover { background: rgba(192,57,43,0.18); color: #ffb4ab; }
+
+.owned-form-error {
+  margin: 0 1.1rem; padding: 0.5rem 0.7rem; border-radius: var(--radius-sm);
+  background: rgba(192,57,43,0.15); border: 1px solid rgba(192,57,43,0.35);
+  color: #ffb4ab; font-size: 0.78rem;
+}
+
+/* ── Mobile ─────────────────────────────────── */
+@media (max-width: 640px) {
+  .owned-grid { grid-template-columns: 1fr; }
+  .owned-form-preview { grid-template-columns: 56px 1fr; }
+  .owned-form-sprite { width: 56px; height: 56px; }
+  .toolbar-top { flex-wrap: wrap; }
+}

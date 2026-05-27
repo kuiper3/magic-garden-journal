@@ -44,7 +44,7 @@ const CLOCK_SVG = `<svg class="stat-icon-img" width="13" height="13" viewBox="0 
 
 // ── Card view ─────────────────────────────────
 
-export function buildPetCard(pet, discovered, eggLookup) {
+export function buildPetCard(pet, discovered, eggLookup, ownedCounts = null) {
   const { key } = pet;
   const name    = petDisplayName(pet);
   const egg     = eggLookup?.[pet.eggName] ?? null;
@@ -54,6 +54,10 @@ export function buildPetCard(pet, discovered, eggLookup) {
   const total   = PET_VARIANTS.length;
   const pct     = Math.round((disc / total) * 100);
   const done    = disc >= total;
+  const ownedN  = ownedCounts?.get(key) ?? 0;
+  const ownedBadge = ownedN > 0
+    ? `<button class="owned-badge" data-owned-species="${key}" title="You own ${ownedN}">📋 ${ownedN}</button>`
+    : '';
 
   const eggRow = `<div class="card-row"><span class="card-row-lbl">${coinIconImg()}Egg</span>`
     + `<span class="card-val${eggPrice == null ? ' muted' : ''}">${eggPrice != null ? fmtCoinValue(eggPrice) : '—'}</span></div>`;
@@ -64,6 +68,7 @@ export function buildPetCard(pet, discovered, eggLookup) {
   return `
     <div class="pet-card${done ? ' complete' : ''}" data-pet-key="${key}">
       <div class="card-rarity-wrap">${rarityIcon(pet.rarity)}</div>
+      ${ownedBadge}
       <div class="card-name">${name}</div>
       <div class="pet-hero">
         ${petImg
@@ -86,7 +91,7 @@ export function buildPetCard(pet, discovered, eggLookup) {
 
 // ── List view ─────────────────────────────────
 
-export function buildPetRow(pet, discovered, eggLookup) {
+export function buildPetRow(pet, discovered, eggLookup, ownedCounts = null) {
   const { key } = pet;
   const name    = petDisplayName(pet);
   const sprite  = pet.sprite ?? eggLookup?.[pet.eggName]?.sprite ?? null;
@@ -96,6 +101,10 @@ export function buildPetRow(pet, discovered, eggLookup) {
   const done    = disc >= total;
   const egg     = eggLookup?.[pet.eggName] ?? null;
   const eggPrice = egg?.coinPrice ?? (pet.eggPrice !== 9999 ? pet.eggPrice : null);
+  const ownedN  = ownedCounts?.get(key) ?? 0;
+  const ownedBadge = ownedN > 0
+    ? `<button class="owned-badge" data-owned-species="${key}" title="You own ${ownedN}">📋 ${ownedN}</button>`
+    : '';
   const eggName = pet.eggName && pet.eggName !== 'Unknown'
     ? pet.eggName.replace(/Egg$/, ' Egg').trim()
     : '';
@@ -120,6 +129,7 @@ export function buildPetRow(pet, discovered, eggLookup) {
         </div>
       </div>
       <div class="row-stats">
+        ${ownedBadge}
         <span class="row-stat" title="Cheapest egg price">${coinIconImg()}${eggPrice != null ? fmtCoinValue(eggPrice) : '—'}</span>
       </div>
       <div class="row-disc${done ? ' done' : ''}">

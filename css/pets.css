@@ -217,3 +217,44 @@
   .pet-variants-grid { grid-template-columns: repeat(2, 1fr); }
   .pet-card .stage-img { width: 40px; height: 40px; }
 }
+
+/* ═══════════════════════════════════════════════
+   OWNED-COUNT BADGE + POPOVER  (v0.7.0)
+   Rendered by pets-grid.js on pet cards/rows; popover is body-anchored.
+   ═══════════════════════════════════════════════ */
+.owned-badge {
+  position: absolute; top: 0.55rem; left: 0.55rem; z-index: 3;
+  display: inline-flex; align-items: center; gap: 0.2rem;
+  background: rgba(90,154,110,0.22); border: 1px solid rgba(90,154,110,0.45);
+  color: #cfffcb; border-radius: 999px;
+  font-family: var(--font-body); font-size: 0.62rem; font-weight: 700;
+  padding: 0.12rem 0.45rem; cursor: pointer; transition: all 0.15s;
+  font-variant-numeric: tabular-nums; line-height: 1.3;
+}
+.owned-badge:hover, .owned-badge.open { background: var(--green-light); color: #06140a; }
+
+/* In list view the badge sits inline within row-stats (no absolute positioning). */
+.pet-row .owned-badge { position: static; top: auto; left: auto; }
+
+.owned-pop {
+  position: fixed; z-index: 250; min-width: 150px; max-width: 240px;
+  background: var(--bg-3); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius-sm); box-shadow: 0 12px 32px rgba(0,0,0,0.55);
+  padding: 0.5rem 0.6rem; animation: fadeIn 0.12s var(--ease) both;
+}
+.owned-pop-head {
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+  color: rgba(255,255,255,0.4); margin-bottom: 0.4rem;
+}
+.owned-pop-row {
+  display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+  font-size: 0.76rem; color: rgba(255,255,255,0.82); padding: 0.18rem 0;
+}
+.owned-pop-row + .owned-pop-row { border-top: 1px solid rgba(255,255,255,0.05); }
+.owned-pop-nick { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.owned-pop-mut {
+  font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 0.05rem 0.35rem; border-radius: 4px;
+  background: rgba(212,168,83,0.2); color: #e7c87a;
+}
+.owned-pop-wt { font-size: 0.7rem; color: rgba(255,255,255,0.5); font-variant-numeric: tabular-nums; }
