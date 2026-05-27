@@ -1,11 +1,20 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/pages/owned-pets-form.js
-// v0.7.0 — add / edit modal for an owned pet instance
+// v0.7.1 — add / edit modal for an owned pet instance
+// ═══════════════════════════════════════════════
+// Fields: species · nickname (optional) · current + max level (steppers) ·
+// weight · abilities (multi-select from the species' innate pool) ·
+// mutation (Normal / Gold / Rainbow).  Ability values preview live, scaled by
+// strength (current → max).
 // ═══════════════════════════════════════════════
 
 import { getSupabase } from '../lib/supabase.js';
 import { petDisplayName } from './pets-grid.js';
-import { OWNED_VARIANTS, ownedSpriteUrl, procShares } from './owned-pets-card.js';
+import { OWNED_VARIANTS, ownedSpriteUrl } from './owned-pets-card.js';
+import {
+  abilityFacets, facetValue, abilityKeys,
+  clampMaxLevel, clampCurLevel, LEVEL,
+} from './owned-pets-abilities.js';
 
 function prettify(str) {
   return String(str ?? '')
@@ -13,33 +22,36 @@ function prettify(str) {
     .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2');
 }
 
-// Module-scoped handles for the live form session.
 let _form = null;
 
 /**
  * Open the owned-pet form.
- * @param {object}   opts
- * @param {object|null} opts.row          Existing row for edit mode, or null to add.
- * @param {Array}    opts.allPets         Species list from getPetsSorted().
- * @param {object}   opts.abilityLookup   abilityKey → { name, description }.
- * @param {Function} opts.onSaved         Called after a successful save/delete.
+ * @param {object}      opts
+ * @param {object|null} opts.row            Existing row for edit mode, or null to add.
+ * @param {Array}       opts.allPets        Species list from getPetsSorted().
+ * @param {object}      opts.abilityLookup  abilityKey → { name, description }.
+ * @param {Function}    opts.onSaved        Called after a successful save/delete.
  */
 export function openOwnedForm({ row = null, allPets = [], abilityLookup = {}, onSaved } = {}) {
   closeOwnedForm();
 
-  const isEdit  = !!row;
-  const byKey   = Object.fromEntries(allPets.map(p => [p.key, p]));
-  const sorted  = [...allPets].sort((a, b) => petDisplayName(a).localeCompare(petDisplayName(b)));
+  const isEdit = !!row;
+  const byKey  = Object.fromEntries(allPets.map(p => [p.key, p]));
+  const sorted = [...allPets].sort((a, b) => petDisplayName(a).localeCompare(petDisplayName(b)));
+
+  const petKey   = row?.pet_key ?? sorted[0]?.key ?? '';
+  const maxLevel = clampMaxLevel(row?.max_level ?? 100);
 
   _form = {
     isEdit,
     rowId:    row?.id ?? null,
-    petKey:   row?.pet_key ?? sorted[0]?.key ?? '',
+    petKey,
     nickname: row?.nickname ?? '',
     variant:  OWNED_VARIANTS.includes(row?.variant) ? row.variant : 'Normal',
     weight:   row?.weight_kg ?? '',
-    // Editable ability-weight map. Seeded below from the row or species defaults.
-    abilities: { ...(row?.abilities ?? {}) },
+    maxLevel,
+    curLevel: clampCurLevel(row?.current_level ?? maxLevel, maxLevel),
+    selected: new Set(abilityKeys(row?.abilities)),
     byKey,
     abilityLookup,
     onSaved,
@@ -75,14 +87,16 @@ export function openOwnedForm({ row = null, allPets = [], abilityLookup = {}, on
           </div>
         </div>
 
-        <div class="owned-form-row owned-form-grid2">
+        <div class="owned-form-row owned-form-grid3">
           <label class="owned-field">
-            <span class="owned-field-lbl">Mutation</span>
-            <div class="owned-seg" id="ofp-variant">
-              ${OWNED_VARIANTS.map(v => `
-                <button type="button" class="owned-seg-btn${v === _form.variant ? ' active' : ''}"
-                        data-variant="${v}">${v}</button>`).join('')}
-            </div>
+            <span class="owned-field-lbl">Current strength</span>
+            <input class="owned-input" id="ofp-cur" type="number" inputmode="numeric"
+                   min="${LEVEL.CUR_MIN}" max="${_form.maxLevel}" step="1" value="${_form.curLevel}">
+          </label>
+          <label class="owned-field">
+            <span class="owned-field-lbl">Max strength</span>
+            <input class="owned-input" id="ofp-max" type="number" inputmode="numeric"
+                   min="${LEVEL.MAX_MIN}" max="${LEVEL.MAX_MAX}" step="1" value="${_form.maxLevel}">
           </label>
           <label class="owned-field">
             <span class="owned-field-lbl">Weight <span class="owned-field-opt">(kg)</span></span>
@@ -92,12 +106,18 @@ export function openOwnedForm({ row = null, allPets = [], abilityLookup = {}, on
         </div>
 
         <div class="owned-form-row">
-          <div class="owned-field-lbl owned-ability-head">
-            <span>Ability weights</span>
-            <button type="button" class="owned-mini-btn" id="ofp-reset-ab" title="Reset to species defaults">Defaults</button>
+          <div class="owned-field-lbl">Abilities <span class="owned-field-opt">(tap the ones it rolled)</span></div>
+          <div class="owned-ability-pool" id="ofp-pool"></div>
+          <div class="owned-ability-preview" id="ofp-preview"></div>
+        </div>
+
+        <div class="owned-form-row">
+          <span class="owned-field-lbl">Mutation</span>
+          <div class="owned-seg" id="ofp-variant">
+            ${OWNED_VARIANTS.map(v => `
+              <button type="button" class="owned-seg-btn${v === _form.variant ? ' active' : ''}"
+                      data-variant="${v}">${v === 'Normal' ? 'None' : v}</button>`).join('')}
           </div>
-          <p class="owned-ability-note">Enter the weight of each ability as rolled on this pet. Proc share updates live.</p>
-          <div class="owned-ability-list" id="ofp-abilities"></div>
         </div>
       </div>
 
@@ -112,10 +132,9 @@ export function openOwnedForm({ row = null, allPets = [], abilityLookup = {}, on
   document.body.appendChild(overlay);
   requestAnimationFrame(() => overlay.classList.add('open'));
 
-  // Seed abilities for add-mode (or rows with none) from the species defaults.
-  if (!Object.keys(_form.abilities).length) seedAbilitiesFromSpecies();
   renderSprite();
-  renderAbilities();
+  renderPool();
+  renderPreview();
   bindForm(overlay);
   document.addEventListener('keydown', onKeydown);
 }
@@ -126,12 +145,12 @@ export function closeOwnedForm() {
   _form = null;
 }
 
-// ── Dynamic sub-renders ───────────────────────
+// ── Sub-renders ───────────────────────────────
 
-function seedAbilitiesFromSpecies() {
+// The pool of abilities a species can roll = keys of its innateAbilityWeights.
+function speciesPool() {
   const sp = _form.byKey[_form.petKey];
-  const weights = sp?.innateAbilityWeights ?? {};
-  _form.abilities = { ...weights };
+  return Object.keys(sp?.innateAbilityWeights ?? {});
 }
 
 function renderSprite() {
@@ -145,37 +164,37 @@ function renderSprite() {
   el.className = `owned-form-sprite${_form.variant !== 'Normal' ? ' ' + _form.variant.toLowerCase() : ''}`;
 }
 
-function renderAbilities() {
-  const el = document.getElementById('ofp-abilities');
+function renderPool() {
+  const el = document.getElementById('ofp-pool');
   if (!el) return;
-  const keys = Object.keys(_form.abilities);
-  if (!keys.length) {
-    el.innerHTML = `<p class="owned-proc-empty">This species has no innate abilities on record.</p>`;
+  const pool = speciesPool();
+  if (!pool.length) {
+    el.innerHTML = `<p class="owned-ab-empty">This species has no innate abilities on record.</p>`;
     return;
   }
-  const shares = procShares(_form.abilities);
-  const pctByKey = Object.fromEntries(shares.map(s => [s.key, s.pct]));
-  el.innerHTML = keys.map(key => {
-    const ab   = _form.abilityLookup[key] ?? {};
-    const name = ab.name ?? prettify(key);
-    const w    = _form.abilities[key];
-    const pct  = Math.round(pctByKey[key] ?? 0);
-    return `
-      <div class="owned-ability-edit">
-        <span class="owned-ability-name">${name}</span>
-        <input class="owned-input owned-ability-weight" type="number" min="0" step="1"
-               inputmode="numeric" data-ability="${key}" value="${escapeAttr(String(w))}">
-        <span class="owned-ability-pct" data-pct-for="${key}">${pct}%</span>
-      </div>`;
+  el.innerHTML = pool.map(key => {
+    const name = _form.abilityLookup[key]?.name ?? prettify(key);
+    const on   = _form.selected.has(key);
+    return `<button type="button" class="owned-ab-chip${on ? ' on' : ''}" data-ability="${key}">${name}</button>`;
   }).join('');
 }
 
-function refreshPcts() {
-  const shares = procShares(_form.abilities);
-  const pctByKey = Object.fromEntries(shares.map(s => [s.key, Math.round(s.pct)]));
-  document.querySelectorAll('[data-pct-for]').forEach(el => {
-    el.textContent = `${pctByKey[el.dataset.pctFor] ?? 0}%`;
-  });
+// Live preview of selected abilities' scaled values (current → max).
+function renderPreview() {
+  const el = document.getElementById('ofp-preview');
+  if (!el) return;
+  const keys = [..._form.selected].filter(k => speciesPool().includes(k));
+  if (!keys.length) { el.innerHTML = ''; return; }
+  const cur = _form.curLevel, max = _form.maxLevel, same = cur === max;
+  el.innerHTML = keys.map(key => {
+    const info = abilityFacets(key, _form.abilityLookup);
+    const rows = info.facets.map(f => {
+      if (f.kind === 'text') return `<span class="owned-pv-facet">${f.text}</span>`;
+      const lo = facetValue(f, cur), hi = facetValue(f, max);
+      return `<span class="owned-pv-facet">${f.label}: ${same ? hi : `${lo} → ${hi}`}</span>`;
+    }).join('');
+    return `<div class="owned-pv-row"><span class="owned-pv-name">${info.name}</span>${rows}</div>`;
+  }).join('');
 }
 
 // ── Bindings ──────────────────────────────────
@@ -189,9 +208,12 @@ function bindForm(overlay) {
 
   document.getElementById('ofp-species')?.addEventListener('change', e => {
     _form.petKey = e.target.value;
-    seedAbilitiesFromSpecies();
+    // New species → different ability pool; drop selections that no longer apply.
+    const pool = new Set(speciesPool());
+    _form.selected = new Set([..._form.selected].filter(k => pool.has(k)));
     renderSprite();
-    renderAbilities();
+    renderPool();
+    renderPreview();
   });
 
   document.getElementById('ofp-nick')?.addEventListener('input', e => {
@@ -202,6 +224,36 @@ function bindForm(overlay) {
     _form.weight = e.target.value;
   });
 
+  document.getElementById('ofp-max')?.addEventListener('input', e => {
+    _form.maxLevel = clampMaxLevel(e.target.value);
+    // Keep current ≤ max and update the current field's ceiling.
+    _form.curLevel = clampCurLevel(_form.curLevel, _form.maxLevel);
+    const curEl = document.getElementById('ofp-cur');
+    if (curEl) { curEl.max = String(_form.maxLevel); curEl.value = String(_form.curLevel); }
+    renderPreview();
+  });
+  document.getElementById('ofp-max')?.addEventListener('blur', e => {
+    e.target.value = String(_form.maxLevel);
+  });
+
+  document.getElementById('ofp-cur')?.addEventListener('input', e => {
+    _form.curLevel = clampCurLevel(e.target.value, _form.maxLevel);
+    renderPreview();
+  });
+  document.getElementById('ofp-cur')?.addEventListener('blur', e => {
+    e.target.value = String(_form.curLevel);
+  });
+
+  document.getElementById('ofp-pool')?.addEventListener('click', e => {
+    const chip = e.target.closest('.owned-ab-chip');
+    if (!chip) return;
+    const key = chip.dataset.ability;
+    if (_form.selected.has(key)) _form.selected.delete(key);
+    else _form.selected.add(key);
+    chip.classList.toggle('on', _form.selected.has(key));
+    renderPreview();
+  });
+
   document.getElementById('ofp-variant')?.addEventListener('click', e => {
     const btn = e.target.closest('.owned-seg-btn');
     if (!btn) return;
@@ -209,20 +261,6 @@ function bindForm(overlay) {
     document.querySelectorAll('#ofp-variant .owned-seg-btn')
       .forEach(b => b.classList.toggle('active', b.dataset.variant === _form.variant));
     renderSprite();
-  });
-
-  document.getElementById('ofp-abilities')?.addEventListener('input', e => {
-    const inp = e.target.closest('.owned-ability-weight');
-    if (!inp) return;
-    const key = inp.dataset.ability;
-    const v   = Number(inp.value);
-    _form.abilities[key] = Number.isFinite(v) && v >= 0 ? v : 0;
-    refreshPcts();
-  });
-
-  document.getElementById('ofp-reset-ab')?.addEventListener('click', () => {
-    seedAbilitiesFromSpecies();
-    renderAbilities();
   });
 
   document.getElementById('ofp-cancel')?.addEventListener('click', closeOwnedForm);
@@ -242,17 +280,17 @@ async function onSave() {
   btn.disabled = true;
   btn.textContent = 'Saving…';
 
-  // Drop zero-weight abilities so the stored map stays clean.
-  const abilities = Object.fromEntries(
-    Object.entries(_form.abilities).filter(([, w]) => Number(w) > 0)
-  );
+  const pool = new Set(speciesPool());
+  const abilities = [..._form.selected].filter(k => pool.has(k));
   const weightNum = _form.weight === '' || _form.weight == null ? null : Number(_form.weight);
 
   const payload = {
-    pet_key:   _form.petKey,
-    nickname:  _form.nickname.trim() || null,
-    weight_kg: Number.isFinite(weightNum) ? weightNum : null,
-    variant:   _form.variant,
+    pet_key:       _form.petKey,
+    nickname:      _form.nickname.trim() || null,
+    weight_kg:     Number.isFinite(weightNum) ? weightNum : null,
+    variant:       _form.variant,
+    current_level: _form.curLevel,
+    max_level:     _form.maxLevel,
     abilities,
   };
 

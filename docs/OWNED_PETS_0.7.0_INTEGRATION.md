@@ -1,3 +1,35 @@
+# Owned Pets — v0.7.1 update (strength model)
+
+> **This supersedes the ability section of the 0.7.0 notes below.** The proc-weight model
+> (editable `{ abilityKey: weight }` map, proc-share bars) is **replaced** by a strength model.
+
+**The mechanic.** A pet's *strength* is one modifier on its ability's base formula:
+`actual = base × (strength / 100)`. It applies to **every** numeric facet of an ability —
+both the proc rate (e.g. 21%/min) and the effect magnitude (e.g. −7 min). Strength caps at
+100, so the base values in `ABILITY_STATIC_DATA` are the strength-100 values. A pet spawns
+with a fixed **max strength (80–100)** and levels from a **current strength (50–max)** up to
+it. Cards show each value **current → max**.
+
+**New file**
+| File | Role |
+|---|---|
+| `js/pages/owned-pets-abilities.js` | Strength engine: `ABILITY_MAGNITUDE` table (the effect numbers that live in display text in aries.js, lifted out as real numbers), `abilityFacets()`, `facetValue()`, level clamps, `abilityKeys()`. **Does not touch `aries.js`** — the Pets discovery page keeps rendering the raw `effectTemplate`/`rate` exactly as before. |
+
+**Changed files (vs 0.7.0)**
+| File | Change |
+|---|---|
+| `migrations/0.7.1_owned_pets_strength.sql` | Adds `current_level` (50–max) + `max_level` (80–100); converts `abilities` from `{key:weight}` object → `[key,…]` array; range CHECKs. Idempotent. Run **after** 0.7.0. |
+| `js/pages/owned-pets-card.js` | Drops `procShares`; renders strength chip (⚡ cur/max) + per-ability current→max values. |
+| `js/pages/owned-pets-form.js` | Current + max strength steppers (clamped); abilities are **multi-select chips** from the species' innate pool; live computed preview; gold/rainbow at the bottom. |
+| `css/owned-pets.css` | Proc-bar styles → ability-value + strength-chip + chip-pool + preview styles; added `.owned-form-grid3`. |
+
+**Data model now:** `owned_pets(… current_level int, max_level int, abilities jsonb /* array of keys */)`.
+The card/form tolerate the old object shape via `abilityKeys()`, and the migration converts stored rows, so pre-0.7.1 test rows still render.
+
+**Deploy:** run `0.7.1_owned_pets_strength.sql` in Supabase → copy the 4 changed files + the new `owned-pets-abilities.js` → bump `package.json`/nav to `0.7.1`. Magnitudes in `ABILITY_MAGNITUDE` were seeded from the wiki numbers already in `ABILITY_STATIC_DATA`'s templates — eyeball them against the game if anything looks off.
+
+---
+
 # Owned Pets — v0.7.0 integration & handoff
 
 Implements **AI_HANDOFF §12**: a standalone *Owned Pets* nav section (one record per

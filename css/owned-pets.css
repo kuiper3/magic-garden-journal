@@ -97,31 +97,43 @@
 .owned-icon-btn:hover { color: #fff; background: rgba(90,154,110,0.2); }
 .owned-icon-btn.danger:hover { background: rgba(192,57,43,0.25); color: #ffb4ab; }
 
-/* ── Proc-share block ───────────────────────── */
-.owned-proc-block {
+/* ── Strength chip (in sub-line) ────────────── */
+.owned-str {
+  display: inline-flex; align-items: center; gap: 0.1rem;
+  color: #cfe9c8; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.owned-str-sep { color: rgba(255,255,255,0.35); margin: 0 0.05rem; }
+
+/* ── Ability value block ────────────────────── */
+.owned-ab-block {
   background: rgba(0,0,0,0.18); border-radius: var(--radius-xs);
-  padding: 0.6rem 0.7rem;
+  padding: 0.55rem 0.7rem; display: flex; flex-direction: column; gap: 0.55rem;
 }
-.owned-proc-title {
-  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-  color: rgba(255,255,255,0.38); margin-bottom: 0.5rem;
+.owned-ab { display: flex; flex-direction: column; gap: 0.25rem; }
+.owned-ab-name {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.78rem; font-weight: 600; color: rgba(255,255,255,0.85);
 }
-.owned-proc-row {
-  display: grid; grid-template-columns: 1fr 70px 34px; align-items: center; gap: 0.5rem;
-  margin-bottom: 0.35rem;
+.owned-ab-weather {
+  font-size: 0.56rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 0.08rem 0.34rem; border-radius: 4px;
+  background: rgba(120,170,210,0.18); color: #aaccea;
 }
-.owned-proc-row:last-child { margin-bottom: 0; }
-.owned-proc-name {
-  font-size: 0.76rem; color: rgba(255,255,255,0.78);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+.owned-ab-facets { display: flex; flex-direction: column; gap: 0.18rem; }
+.owned-ab-facet {
+  display: grid; grid-template-columns: 58px 1fr; align-items: baseline; gap: 0.5rem;
+  font-size: 0.74rem;
 }
-.owned-proc-bar { height: 5px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden; }
-.owned-proc-fill { height: 100%; background: var(--green-light); border-radius: 999px; transition: width 0.2s var(--ease); }
-.owned-proc-pct {
-  font-size: 0.72rem; color: rgba(255,255,255,0.6); text-align: right;
-  font-variant-numeric: tabular-nums;
+.owned-ab-lbl {
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
 }
-.owned-proc-empty { font-size: 0.76rem; color: rgba(255,255,255,0.35); font-style: italic; margin: 0; }
+.owned-ab-val { color: rgba(255,255,255,0.82); font-variant-numeric: tabular-nums; }
+.owned-ab-val.muted { color: rgba(255,255,255,0.35); }
+.owned-ab-cur   { color: rgba(255,255,255,0.6); }
+.owned-ab-arrow { color: rgba(255,255,255,0.3); margin: 0 0.3rem; }
+.owned-ab-max   { color: var(--green-light); font-weight: 600; }
+.owned-ab-empty { font-size: 0.76rem; color: rgba(255,255,255,0.35); font-style: italic; margin: 0; }
 
 /* ── Empty state ────────────────────────────── */
 .owned-empty {
@@ -139,6 +151,7 @@
 .owned-form-body { padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 1.1rem; }
 .owned-form-row { display: flex; flex-direction: column; gap: 0.4rem; }
 .owned-form-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+.owned-form-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.7rem; }
 .owned-form-preview { display: grid; grid-template-columns: 64px 1fr; gap: 0.85rem; align-items: start; }
 
 .owned-form-sprite {
@@ -178,27 +191,32 @@ select.owned-input { appearance: none; cursor: pointer; }
 .owned-seg-btn:hover { color: rgba(255,255,255,0.85); }
 .owned-seg-btn.active { color: #cfffcb; background: rgba(90,154,110,0.28); border-color: rgba(90,154,110,0.55); }
 
-/* Ability weight editor */
-.owned-ability-head { display: flex; align-items: center; justify-content: space-between; }
-.owned-mini-btn {
-  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.55); border-radius: 999px;
-  font-family: var(--font-body); font-size: 0.66rem; padding: 0.2rem 0.6rem; cursor: pointer; transition: all 0.15s;
+/* Ability multi-select pool */
+.owned-ability-pool { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.owned-ab-chip {
+  background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.6); border-radius: 999px;
+  font-family: var(--font-body); font-size: 0.74rem; padding: 0.3rem 0.7rem;
+  cursor: pointer; transition: all 0.15s;
 }
-.owned-mini-btn:hover { color: #fff; background: rgba(90,154,110,0.2); }
-.owned-ability-note { font-size: 0.72rem; color: rgba(255,255,255,0.4); margin: 0 0 0.2rem; line-height: 1.4; }
-.owned-ability-list { display: flex; flex-direction: column; gap: 0.4rem; }
-.owned-ability-edit {
-  display: grid; grid-template-columns: 1fr 74px 40px; align-items: center; gap: 0.5rem;
+.owned-ab-chip:hover { color: rgba(255,255,255,0.9); border-color: rgba(255,255,255,0.25); }
+.owned-ab-chip.on {
+  color: #cfffcb; background: rgba(90,154,110,0.28);
+  border-color: rgba(90,154,110,0.6);
 }
-.owned-ability-name {
-  font-size: 0.8rem; color: rgba(255,255,255,0.8);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+.owned-ab-chip.on::before { content: '✓ '; opacity: 0.8; }
+
+/* Live computed preview of selected abilities */
+.owned-ability-preview { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.2rem; }
+.owned-ability-preview:empty { display: none; }
+.owned-pv-row {
+  display: flex; flex-direction: column; gap: 0.1rem;
+  background: rgba(0,0,0,0.18); border-radius: var(--radius-xs); padding: 0.4rem 0.6rem;
 }
-.owned-ability-weight { padding: 0.35rem 0.5rem; font-size: 0.8rem; text-align: right; }
-.owned-ability-pct {
-  font-size: 0.76rem; font-weight: 600; color: var(--green-light); text-align: right;
-  font-variant-numeric: tabular-nums;
+.owned-pv-name { font-size: 0.74rem; font-weight: 600; color: rgba(255,255,255,0.85); }
+.owned-pv-facet {
+  font-size: 0.72rem; color: rgba(255,255,255,0.6); font-variant-numeric: tabular-nums;
+  margin-right: 0.8rem;
 }
 
 /* Form actions */
@@ -231,5 +249,7 @@ select.owned-input { appearance: none; cursor: pointer; }
   .owned-grid { grid-template-columns: 1fr; }
   .owned-form-preview { grid-template-columns: 56px 1fr; }
   .owned-form-sprite { width: 56px; height: 56px; }
+  .owned-form-grid3 { gap: 0.5rem; }
+  .owned-form-grid3 .owned-input { padding: 0.5rem 0.4rem; }
   .toolbar-top { flex-wrap: wrap; }
 }

@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/app.js
-// v0.4.1 — router + nav render (v0.6.4 nav string)
+// v0.4.1 — router + nav render (v0.7.1 nav string)
 // ═══════════════════════════════════════════════
 
 import { initAuth, getSession, signIn, signOut } from './lib/auth.js';
