@@ -7,7 +7,7 @@ import { navigate } from '../app.js';
 import { signOut } from '../lib/auth.js';
 import { getSupabase } from '../lib/supabase.js';
 
-const VERSION = '0.8.2';
+const VERSION = '0.9.0';
 const REPO    = 'https://github.com/kuiper3/magic-garden-journal';
 
 export function render(container) {
@@ -15,6 +15,24 @@ export function render(container) {
     <link rel="stylesheet" href="css/settings.css">
     <div class="set-wrap">
       <h2 class="set-title">⚙️ Settings</h2>
+
+      <section class="set-card">
+        <h3 class="set-card-title">Appearance</h3>
+        <div class="set-themes" id="set-themes">
+          <button class="set-theme" data-theme="forest" style="--sw-bg:#0c1a0e;--sw-card:#13261a;--sw-ac:#5a9a6e">
+            <span class="set-sw"><span class="set-sw-dot"></span></span><span class="set-theme-name">Forest</span><span class="set-theme-kind">dark</span>
+          </button>
+          <button class="set-theme" data-theme="midnight" style="--sw-bg:#0d1320;--sw-card:#151d2f;--sw-ac:#7fa3d8">
+            <span class="set-sw"><span class="set-sw-dot"></span></span><span class="set-theme-name">Midnight</span><span class="set-theme-kind">dark</span>
+          </button>
+          <button class="set-theme" data-theme="parchment" style="--sw-bg:#efe9d9;--sw-card:#f9f5ea;--sw-ac:#3d6e4f">
+            <span class="set-sw"><span class="set-sw-dot"></span></span><span class="set-theme-name">Parchment</span><span class="set-theme-kind">light</span>
+          </button>
+          <button class="set-theme" data-theme="meadow" style="--sw-bg:#e9f2ea;--sw-card:#ffffff;--sw-ac:#2f7a4d">
+            <span class="set-sw"><span class="set-sw-dot"></span></span><span class="set-theme-name">Meadow</span><span class="set-theme-kind">light</span>
+          </button>
+        </div>
+      </section>
 
       <section class="set-card">
         <h3 class="set-card-title">Resources</h3>
@@ -66,7 +84,10 @@ export async function init() {
   document.querySelector('.set-wrap')?.addEventListener('click', e => {
     const row = e.target.closest('[data-go]');
     if (row) { navigate(row.dataset.go); return; }
+    const themeBtn = e.target.closest('.set-theme');
+    if (themeBtn) applyTheme(themeBtn.dataset.theme);
   });
+  markActiveTheme();
 
   document.getElementById('set-signout')?.addEventListener('click', async e => {
     const btn = e.currentTarget;
@@ -91,6 +112,19 @@ export async function init() {
   }
 
   initDangerZone();
+}
+
+// ── Themes ────────────────────────────────────
+function applyTheme(id) {
+  document.documentElement.dataset.theme = id;
+  try { localStorage.setItem('mgj_theme', id); } catch (_) { /* private mode */ }
+  markActiveTheme();
+}
+
+function markActiveTheme() {
+  const current = document.documentElement.dataset.theme || 'forest';
+  document.querySelectorAll('.set-theme').forEach(b =>
+    b.classList.toggle('active', b.dataset.theme === current));
 }
 
 // ── Danger zone: delete all owned pets ────────

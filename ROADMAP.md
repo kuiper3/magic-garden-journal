@@ -1,5 +1,8 @@
 # Roadmap — Magic Garden Journal
 
+> **Status 2026-06-06:** v0.9.0 shipped — Owned Pets (strength model, JSON import w/ auto-computed strength), sidebar overhaul, Settings hub (4 themes, backup, danger zone), guide, exporter userscript. Next major: Google sign-in. Next PROJECT: Stock Tracker (separate repo).
+
+
 > **Internal doc version:** `0.4.0` · **Last updated:** 2026-05-17
 
 ---

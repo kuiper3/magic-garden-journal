@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/app.js
-// v0.5.0 — router + sidebar (v0.8.2 nav string)
+// v0.5.0 — router + sidebar (v0.9.0 nav string)
 // ═══════════════════════════════════════════════
 // Sidebar: collapsible icon rail on desktop (chevron, persisted), slide-over
 // drawer on mobile (☰ button + backdrop, closes on navigate/tap-off).
@@ -36,10 +36,23 @@ const LOGO_SVG = `
     <path d="M10.5 24.5h11" stroke="rgba(255,255,255,0.28)" stroke-width="1.6" stroke-linecap="round"/>
   </svg>`;
 
-function navLink(route, icon, label) {
+// Line icons (24×24 stroke paths, ChatGPT/Claude-style). Each link carries its
+// own accent color via --icon-c; the stroke uses it, active state brightens it.
+const NAV_ICONS = {
+  plants: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-8"/><path d="M12 12C12 7.5 8.5 5 4.5 5c0 4.5 3.5 7.2 7.5 7"/><path d="M12 9.5C12 6 14.8 4 18.5 4c0 3.8-2.8 6-6.5 5.5"/><path d="M7 20h10"/></svg>`,
+  pets: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="10" r="1.6"/><circle cx="9.3" cy="6.4" r="1.7"/><circle cx="14.7" cy="6.4" r="1.7"/><circle cx="18.5" cy="10" r="1.6"/><path d="M12 11c-2.6 0-5.2 2.2-5.2 4.6 0 1.6 1.2 2.6 2.7 2.6 1 0 1.7-.5 2.5-.5s1.5.5 2.5.5c1.5 0 2.7-1 2.7-2.6C17.2 13.2 14.6 11 12 11Z"/></svg>`,
+  owned: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4.5V3.2A1.2 1.2 0 0 1 10.2 2h3.6A1.2 1.2 0 0 1 15 3.2v1.3"/><path d="M9 10h6"/><path d="M9 14h6"/><path d="M9 18h3.5"/></svg>`,
+  settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"/><path d="M19.2 14.7a1.8 1.8 0 0 0 .36 1.99l.06.06a2.2 2.2 0 1 1-3.11 3.11l-.06-.06a1.8 1.8 0 0 0-1.99-.36 1.8 1.8 0 0 0-1.09 1.65V21.3a2.2 2.2 0 1 1-4.4 0v-.09a1.8 1.8 0 0 0-1.18-1.65 1.8 1.8 0 0 0-1.99.36l-.06.06a2.2 2.2 0 1 1-3.11-3.11l.06-.06a1.8 1.8 0 0 0 .36-1.99 1.8 1.8 0 0 0-1.65-1.09H2.7a2.2 2.2 0 1 1 0-4.4h.09a1.8 1.8 0 0 0 1.65-1.18 1.8 1.8 0 0 0-.36-1.99l-.06-.06a2.2 2.2 0 1 1 3.11-3.11l.06.06a1.8 1.8 0 0 0 1.99.36h.09a1.8 1.8 0 0 0 1.09-1.65V2.7a2.2 2.2 0 1 1 4.4 0v.09a1.8 1.8 0 0 0 1.09 1.65 1.8 1.8 0 0 0 1.99-.36l.06-.06a2.2 2.2 0 1 1 3.11 3.11l-.06.06a1.8 1.8 0 0 0-.36 1.99v.09a1.8 1.8 0 0 0 1.65 1.09h.09a2.2 2.2 0 1 1 0 4.4h-.09a1.8 1.8 0 0 0-1.65 1.09Z"/></svg>`,
+};
+const NAV_ICON_COLORS = {
+  plants: '#6cc28a', pets: '#d8a657', owned: '#7fa3d8', settings: '#b08fd8',
+};
+
+function navLink(route, iconId, label) {
   return `
-    <a class="nav-link" data-route="${route}" href="${route}" title="${label}">
-      <span class="nav-icon">${icon}</span><span class="nav-label">${label}</span>
+    <a class="nav-link" data-route="${route}" href="${route}" title="${label}"
+       style="--icon-c: ${NAV_ICON_COLORS[iconId] ?? 'currentColor'}">
+      <span class="nav-icon">${NAV_ICONS[iconId] ?? ''}</span><span class="nav-label">${label}</span>
     </a>`;
 }
 
@@ -52,16 +65,16 @@ function renderNav() {
         ${LOGO_SVG}
         <span class="brand-text">
           <span class="brand-eyebrow">Magic Garden</span>
-          <span class="brand-name">Journal <span class="nav-version">v0.8.2</span></span>
+          <span class="brand-name">Journal <span class="nav-version">v0.9.0</span></span>
         </span>
       </a>
       <button class="nav-collapse" id="nav-collapse" title="Collapse sidebar" aria-label="Toggle sidebar">‹</button>
     </div>
-    ${navLink('/plants', '🌱', 'Plants')}
-    ${navLink('/pets', '🐾', 'Pets')}
-    ${navLink('/owned', '📋', 'Owned')}
+    ${navLink('/plants', 'plants', 'Plants')}
+    ${navLink('/pets', 'pets', 'Pets')}
+    ${navLink('/owned', 'owned', 'Owned')}
     <div class="nav-spacer"></div>
-    ${navLink('/settings', '⚙️', 'Settings')}
+    ${navLink('/settings', 'settings', 'Settings')}
   `;
 
   if (localStorage.getItem(COLLAPSE_KEY) === '1') navEl.classList.add('nav--collapsed');

@@ -5,6 +5,32 @@
 
 ---
 
+## [0.9.0] — 2026-06-06 *(Themes, line icons, perf, full handoff docs)*
+
+### Added
+- **Four themes** in Settings → Appearance: Forest (default dark, contrast-corrected),
+  Midnight (dark blue), Parchment (warm light), Meadow (cool light). Swatch previews,
+  persisted (`mgj_theme`), applied pre-paint (no flash). Entire CSS refactored to
+  theme tokens — zero hardcoded white-alpha text remains.
+- **Colored line icons** in the sidebar (stroke SVGs replacing emojis): Plants green,
+  Pets amber, Owned blue, Settings purple.
+
+### Changed
+- **Dark-theme contrast raised**: nav link text 0.45→0.62 alpha; active state now
+  uses a stronger tint (0.12→0.28) + bright accent ink + semibold, so Plants/Owned
+  no longer blend into the background.
+- AI_HANDOFF.md fully rewritten (doc v1.0.0) — complete project state, rules,
+  architecture, data model, strength formula, flows. ROADMAP status updated.
+
+### Fixed
+- **Pets-page search box rendered as an unstyled white input** — pets.css never
+  styled `#pet-search`. Generic `.search-wrap input` rule now covers all pages.
+
+### Performance
+- All page stylesheets preloaded in `index.html` (navigation no longer waits on
+  per-page CSS fetches — the unstyled-toolbar flash on slow loads), modulepreload
+  for the router/data layer/main pages, preconnect to the AriesMod API.
+
 ## [0.8.2] — 2026-06-06 *(Real strength on import)*
 
 ### Added

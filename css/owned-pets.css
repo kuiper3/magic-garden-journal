@@ -8,21 +8,21 @@
 /* ── Toolbar header ─────────────────────────── */
 .owned-page-title {
   font-family: var(--font-display);
-  font-size: 1.3rem; font-weight: 700; color: #fff;
+  font-size: 1.3rem; font-weight: 700; color: var(--fg-strong);
   display: flex; align-items: center; gap: 0.6rem; margin: 0;
 }
 .owned-count-chip {
   font-family: var(--font-body); font-size: 0.7rem; font-weight: 500;
-  color: rgba(255,255,255,0.5);
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(var(--fg-rgb),0.5);
+  background: rgba(var(--fg-rgb),0.06);
+  border: 1px solid rgba(var(--fg-rgb),0.08);
   padding: 0.2rem 0.6rem; border-radius: 999px; white-space: nowrap;
 }
 .toolbar-top { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
 
 .owned-add-btn {
-  background: var(--green); color: #cfffcb;
-  border: 1px solid rgba(90,154,110,0.5); border-radius: 999px;
+  background: var(--green); color: var(--accent-ink-strong);
+  border: 1px solid rgba(var(--accent-rgb),0.5); border-radius: 999px;
   font-family: var(--font-body); font-size: 0.82rem; font-weight: 600;
   padding: 0.45rem 1rem; cursor: pointer; transition: all 0.15s; white-space: nowrap;
 }
@@ -33,12 +33,12 @@
 .owned-group-head {
   display: flex; align-items: center; gap: 0.55rem;
   padding-bottom: 0.5rem; margin-bottom: 0.7rem;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  border-bottom: 1px solid rgba(var(--fg-rgb),0.07);
 }
 .owned-group-sprite { width: 30px; height: 30px; object-fit: contain; image-rendering: crisp-edges; }
 .owned-group-sprite.missing { display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-.owned-group-name { font-size: 0.95rem; font-weight: 600; color: rgba(255,255,255,0.9); }
-.owned-group-count { font-size: 0.78rem; color: rgba(255,255,255,0.4); font-variant-numeric: tabular-nums; }
+.owned-group-name { font-size: 0.95rem; font-weight: 600; color: rgba(var(--fg-rgb),0.9); }
+.owned-group-count { font-size: 0.78rem; color: rgba(var(--fg-rgb),0.4); font-variant-numeric: tabular-nums; }
 
 .owned-grid {
   display: grid; gap: 0.85rem;
@@ -47,13 +47,13 @@
 
 /* ── Owned card ─────────────────────────────── */
 .owned-card {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(var(--fg-rgb),0.03);
+  border: 1px solid rgba(var(--fg-rgb),0.08);
   border-radius: var(--radius-sm);
   padding: 0.85rem; display: flex; flex-direction: column; gap: 0.75rem;
   transition: border-color 0.15s, background 0.15s;
 }
-.owned-card:hover { border-color: rgba(255,255,255,0.16); }
+.owned-card:hover { border-color: rgba(var(--fg-rgb),0.16); }
 .owned-card.variant-gold    { border-color: rgba(212,168,83,0.35); }
 .owned-card.variant-rainbow { border-color: rgba(150,120,200,0.4); }
 
@@ -71,16 +71,16 @@
 .owned-card-id { flex: 1; min-width: 0; }
 .owned-name-line { display: flex; align-items: center; gap: 0.4rem; }
 .owned-nick {
-  font-size: 0.98rem; font-weight: 600; color: #fff;
+  font-size: 0.98rem; font-weight: 600; color: var(--fg-strong);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .owned-name-line .card-rarity-icon { width: 16px; height: 16px; object-fit: contain; flex-shrink: 0; }
 .owned-sub-line {
   display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;
-  margin-top: 0.2rem; font-size: 0.74rem; color: rgba(255,255,255,0.5);
+  margin-top: 0.2rem; font-size: 0.74rem; color: rgba(var(--fg-rgb),0.5);
 }
-.owned-species { color: rgba(255,255,255,0.55); }
-.owned-weight { color: rgba(255,255,255,0.65); font-variant-numeric: tabular-nums; }
+.owned-species { color: rgba(var(--fg-rgb),0.55); }
+.owned-weight { color: rgba(var(--fg-rgb),0.65); font-variant-numeric: tabular-nums; }
 .owned-variant-tag {
   font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
   padding: 0.1rem 0.4rem; border-radius: 4px;
@@ -90,19 +90,19 @@
 
 .owned-card-actions { display: flex; gap: 0.25rem; flex-shrink: 0; }
 .owned-icon-btn {
-  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.55); border-radius: 6px;
+  background: rgba(var(--fg-rgb),0.05); border: 1px solid rgba(var(--fg-rgb),0.08);
+  color: rgba(var(--fg-rgb),0.55); border-radius: 6px;
   width: 28px; height: 28px; cursor: pointer; font-size: 0.8rem; transition: all 0.15s;
 }
-.owned-icon-btn:hover { color: #fff; background: rgba(90,154,110,0.2); }
-.owned-icon-btn.danger:hover { background: rgba(192,57,43,0.25); color: #ffb4ab; }
+.owned-icon-btn:hover { color: var(--fg-strong); background: rgba(var(--accent-rgb),0.2); }
+.owned-icon-btn.danger:hover { background: rgba(192,57,43,0.25); color: var(--danger-ink); }
 
 /* ── Strength chip (in sub-line) ────────────── */
 .owned-str {
   display: inline-flex; align-items: center; gap: 0.1rem;
-  color: #cfe9c8; font-weight: 600; font-variant-numeric: tabular-nums;
+  color: var(--accent-ink); font-weight: 600; font-variant-numeric: tabular-nums;
 }
-.owned-str-sep { color: rgba(255,255,255,0.35); margin: 0 0.05rem; }
+.owned-str-sep { color: rgba(var(--fg-rgb),0.35); margin: 0 0.05rem; }
 
 /* ── Ability value block ────────────────────── */
 .owned-ab-block {
@@ -112,7 +112,7 @@
 .owned-ab { display: flex; flex-direction: column; gap: 0.25rem; }
 .owned-ab-name {
   display: flex; align-items: center; gap: 0.4rem;
-  font-size: 0.78rem; font-weight: 600; color: rgba(255,255,255,0.85);
+  font-size: 0.78rem; font-weight: 600; color: rgba(var(--fg-rgb),0.85);
 }
 .owned-ab-weather {
   font-size: 0.56rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
@@ -126,14 +126,14 @@
 }
 .owned-ab-lbl {
   font-size: 0.6rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
+  color: rgba(var(--fg-rgb),0.4);
 }
-.owned-ab-val { color: rgba(255,255,255,0.82); font-variant-numeric: tabular-nums; }
-.owned-ab-val.muted { color: rgba(255,255,255,0.35); }
-.owned-ab-cur   { color: rgba(255,255,255,0.6); }
-.owned-ab-arrow { color: rgba(255,255,255,0.3); margin: 0 0.3rem; }
+.owned-ab-val { color: rgba(var(--fg-rgb),0.82); font-variant-numeric: tabular-nums; }
+.owned-ab-val.muted { color: rgba(var(--fg-rgb),0.35); }
+.owned-ab-cur   { color: rgba(var(--fg-rgb),0.6); }
+.owned-ab-arrow { color: rgba(var(--fg-rgb),0.3); margin: 0 0.3rem; }
 .owned-ab-max   { color: var(--green-light); font-weight: 600; }
-.owned-ab-empty { font-size: 0.76rem; color: rgba(255,255,255,0.35); font-style: italic; margin: 0; }
+.owned-ab-empty { font-size: 0.76rem; color: rgba(var(--fg-rgb),0.35); font-style: italic; margin: 0; }
 
 /* ── Empty state ────────────────────────────── */
 .owned-empty {
@@ -141,8 +141,8 @@
   gap: 0.5rem; padding: 3.5rem 1rem;
 }
 .owned-empty-emblem { font-size: 2.6rem; opacity: 0.5; }
-.owned-empty-title { font-size: 1.1rem; font-weight: 600; color: rgba(255,255,255,0.85); margin: 0; }
-.owned-empty-sub { font-size: 0.85rem; color: rgba(255,255,255,0.45); max-width: 340px; margin: 0 0 0.8rem; line-height: 1.5; }
+.owned-empty-title { font-size: 1.1rem; font-weight: 600; color: rgba(var(--fg-rgb),0.85); margin: 0; }
+.owned-empty-sub { font-size: 0.85rem; color: rgba(var(--fg-rgb),0.45); max-width: 340px; margin: 0 0 0.8rem; line-height: 1.5; }
 
 /* ═══════════════════════════════════════════════
    ADD / EDIT FORM
@@ -166,13 +166,13 @@
 .owned-field { display: flex; flex-direction: column; gap: 0.3rem; }
 .owned-field-lbl {
   font-size: 0.66rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
-  color: rgba(255,255,255,0.42);
+  color: rgba(var(--fg-rgb),0.42);
 }
-.owned-field-opt { font-weight: 400; text-transform: none; letter-spacing: 0; color: rgba(255,255,255,0.3); }
+.owned-field-opt { font-weight: 400; text-transform: none; letter-spacing: 0; color: rgba(var(--fg-rgb),0.3); }
 
 .owned-input {
-  background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12);
-  border-radius: var(--radius-sm); color: #fff;
+  background: rgba(0,0,0,0.25); border: 1px solid rgba(var(--fg-rgb),0.12);
+  border-radius: var(--radius-sm); color: var(--fg-strong);
   font-family: var(--font-body); font-size: 0.86rem; padding: 0.5rem 0.7rem;
   width: 100%; transition: border-color 0.15s, background 0.15s;
 }
@@ -183,26 +183,26 @@ select.owned-input { appearance: none; cursor: pointer; }
 /* Segmented mutation control */
 .owned-seg { display: flex; gap: 0.3rem; }
 .owned-seg-btn {
-  flex: 1; background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.55); border-radius: var(--radius-sm);
+  flex: 1; background: rgba(0,0,0,0.22); border: 1px solid rgba(var(--fg-rgb),0.1);
+  color: rgba(var(--fg-rgb),0.55); border-radius: var(--radius-sm);
   font-family: var(--font-body); font-size: 0.78rem; padding: 0.45rem 0.3rem;
   cursor: pointer; transition: all 0.15s;
 }
-.owned-seg-btn:hover { color: rgba(255,255,255,0.85); }
-.owned-seg-btn.active { color: #cfffcb; background: rgba(90,154,110,0.28); border-color: rgba(90,154,110,0.55); }
+.owned-seg-btn:hover { color: rgba(var(--fg-rgb),0.85); }
+.owned-seg-btn.active { color: var(--accent-ink-strong); background: rgba(var(--accent-rgb),0.28); border-color: rgba(var(--accent-rgb),0.55); }
 
 /* Ability multi-select pool */
 .owned-ability-pool { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .owned-ab-chip {
-  background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.12);
-  color: rgba(255,255,255,0.6); border-radius: 999px;
+  background: rgba(0,0,0,0.22); border: 1px solid rgba(var(--fg-rgb),0.12);
+  color: rgba(var(--fg-rgb),0.6); border-radius: 999px;
   font-family: var(--font-body); font-size: 0.74rem; padding: 0.3rem 0.7rem;
   cursor: pointer; transition: all 0.15s;
 }
-.owned-ab-chip:hover { color: rgba(255,255,255,0.9); border-color: rgba(255,255,255,0.25); }
+.owned-ab-chip:hover { color: rgba(var(--fg-rgb),0.9); border-color: rgba(var(--fg-rgb),0.25); }
 .owned-ab-chip.on {
-  color: #cfffcb; background: rgba(90,154,110,0.28);
-  border-color: rgba(90,154,110,0.6);
+  color: var(--accent-ink-strong); background: rgba(var(--accent-rgb),0.28);
+  border-color: rgba(var(--accent-rgb),0.6);
 }
 .owned-ab-chip.on::before { content: '✓ '; opacity: 0.8; }
 
@@ -213,16 +213,16 @@ select.owned-input { appearance: none; cursor: pointer; }
   display: flex; flex-direction: column; gap: 0.1rem;
   background: rgba(0,0,0,0.18); border-radius: var(--radius-xs); padding: 0.4rem 0.6rem;
 }
-.owned-pv-name { font-size: 0.74rem; font-weight: 600; color: rgba(255,255,255,0.85); }
+.owned-pv-name { font-size: 0.74rem; font-weight: 600; color: rgba(var(--fg-rgb),0.85); }
 .owned-pv-facet {
-  font-size: 0.72rem; color: rgba(255,255,255,0.6); font-variant-numeric: tabular-nums;
+  font-size: 0.72rem; color: rgba(var(--fg-rgb),0.6); font-variant-numeric: tabular-nums;
   margin-right: 0.8rem;
 }
 
 /* Form actions */
 .owned-form-actions {
   display: flex; align-items: center; gap: 0.5rem;
-  padding: 0.85rem 1.1rem; border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 0.85rem 1.1rem; border-top: 1px solid rgba(var(--fg-rgb),0.06);
   position: sticky; bottom: 0; background: var(--bg-2);
 }
 .owned-form-spacer { flex: 1; }
@@ -230,18 +230,18 @@ select.owned-input { appearance: none; cursor: pointer; }
   border-radius: 999px; font-family: var(--font-body); font-size: 0.82rem; font-weight: 500;
   padding: 0.5rem 1.1rem; cursor: pointer; transition: all 0.15s; border: 1px solid transparent;
 }
-.owned-form-btn.primary { background: var(--green); color: #cfffcb; border-color: rgba(90,154,110,0.5); }
+.owned-form-btn.primary { background: var(--green); color: var(--accent-ink-strong); border-color: rgba(var(--accent-rgb),0.5); }
 .owned-form-btn.primary:hover { background: var(--green-light); color: #06140a; }
 .owned-form-btn.primary:disabled { opacity: 0.6; cursor: default; }
-.owned-form-btn.ghost { background: transparent; color: rgba(255,255,255,0.55); border-color: rgba(255,255,255,0.12); }
-.owned-form-btn.ghost:hover { color: #fff; border-color: rgba(255,255,255,0.25); }
+.owned-form-btn.ghost { background: transparent; color: rgba(var(--fg-rgb),0.55); border-color: rgba(var(--fg-rgb),0.12); }
+.owned-form-btn.ghost:hover { color: var(--fg-strong); border-color: rgba(var(--fg-rgb),0.25); }
 .owned-form-btn.danger { background: transparent; color: #e08070; border-color: rgba(192,57,43,0.35); }
-.owned-form-btn.danger:hover { background: rgba(192,57,43,0.18); color: #ffb4ab; }
+.owned-form-btn.danger:hover { background: rgba(192,57,43,0.18); color: var(--danger-ink); }
 
 .owned-form-error {
   margin: 0 1.1rem; padding: 0.5rem 0.7rem; border-radius: var(--radius-sm);
   background: rgba(192,57,43,0.15); border: 1px solid rgba(192,57,43,0.35);
-  color: #ffb4ab; font-size: 0.78rem;
+  color: var(--danger-ink); font-size: 0.78rem;
 }
 
 /* ── Mobile ─────────────────────────────────── */
@@ -257,46 +257,46 @@ select.owned-input { appearance: none; cursor: pointer; }
 /* ── JSON import modal (v0.7.2) ─────────────── */
 .owned-toolbar-btns { display: flex; gap: 0.45rem; }
 .owned-add-btn.ghost {
-  background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.14);
-  color: rgba(255,255,255,0.7);
+  background: rgba(var(--fg-rgb),0.05); border-color: rgba(var(--fg-rgb),0.14);
+  color: rgba(var(--fg-rgb),0.7);
 }
-.owned-add-btn.ghost:hover { background: rgba(90,154,110,0.18); color: #fff; }
-.owned-import-hint { font-size: 0.76rem; color: rgba(255,255,255,0.5); margin: 0; line-height: 1.45; }
+.owned-add-btn.ghost:hover { background: rgba(var(--accent-rgb),0.18); color: var(--fg-strong); }
+.owned-import-hint { font-size: 0.76rem; color: rgba(var(--fg-rgb),0.5); margin: 0; line-height: 1.45; }
 .owned-import-hint code { font-size: 0.72rem; background: rgba(0,0,0,0.3); padding: 0.05rem 0.3rem; border-radius: 4px; }
 .owned-import-ta { font-family: monospace; font-size: 0.74rem; resize: vertical; min-height: 110px; }
 .owned-import-preview { display: flex; flex-direction: column; gap: 0.3rem; max-height: 240px; overflow-y: auto; }
-.owned-imp-summary { font-size: 0.78rem; font-weight: 600; color: #cfe9c8; margin-bottom: 0.15rem; }
+.owned-imp-summary { font-size: 0.78rem; font-weight: 600; color: var(--accent-ink); margin-bottom: 0.15rem; }
 .owned-imp-row {
   display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem;
   background: rgba(0,0,0,0.18); border-radius: var(--radius-xs);
   padding: 0.35rem 0.55rem; font-size: 0.74rem;
 }
 .owned-imp-row.dup { opacity: 0.45; }
-.owned-imp-row.err { color: #ffb4ab; }
-.owned-imp-name { color: rgba(255,255,255,0.85); font-weight: 600; }
-.owned-imp-name .muted { color: rgba(255,255,255,0.45); font-weight: 400; }
-.owned-imp-meta { color: rgba(255,255,255,0.55); font-variant-numeric: tabular-nums; }
-.owned-imp-note { color: #e0c36a; font-size: 0.68rem; }
+.owned-imp-row.err { color: var(--danger-ink); }
+.owned-imp-name { color: rgba(var(--fg-rgb),0.85); font-weight: 600; }
+.owned-imp-name .muted { color: rgba(var(--fg-rgb),0.45); font-weight: 400; }
+.owned-imp-meta { color: rgba(var(--fg-rgb),0.55); font-variant-numeric: tabular-nums; }
+.owned-imp-note { color: var(--warn-ink); font-size: 0.68rem; }
 
 /* Import drop zone (v0.7.2) */
 .owned-import-drop {
   display: flex; align-items: center; justify-content: center; gap: 0.6rem; flex-wrap: wrap;
-  border: 1.5px dashed rgba(255,255,255,0.18); border-radius: var(--radius-sm);
-  padding: 0.9rem 0.7rem; font-size: 0.76rem; color: rgba(255,255,255,0.5);
+  border: 1.5px dashed rgba(var(--fg-rgb),0.18); border-radius: var(--radius-sm);
+  padding: 0.9rem 0.7rem; font-size: 0.76rem; color: rgba(var(--fg-rgb),0.5);
   transition: border-color 0.15s, background 0.15s;
 }
-.owned-import-drop.over { border-color: var(--green-light); background: rgba(90,154,110,0.12); }
+.owned-import-drop.over { border-color: var(--green-light); background: rgba(var(--accent-rgb),0.12); }
 
 /* ── v0.8.0 fixes ───────────────────────────── */
 /* Owned search input: plants.css styles #plant-search by ID, so this input
    was falling back to browser defaults (white box). Mirror that styling. */
-#owned-search { background: none; border: none; outline: none; color: rgba(255,255,255,0.85); font-family: var(--font-body); font-size: 0.85rem; width: 100%; }
-#owned-search::placeholder { color: rgba(255,255,255,0.3); }
+#owned-search { background: none; border: none; outline: none; color: rgba(var(--fg-rgb),0.85); font-family: var(--font-body); font-size: 0.85rem; width: 100%; }
+#owned-search::placeholder { color: rgba(var(--fg-rgb),0.3); }
 
 /* Drop zone contrast: was unreadably dark-on-dark. */
 .owned-import-drop {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.35);
-  color: rgba(255,255,255,0.78);
+  background: rgba(var(--fg-rgb),0.05);
+  border-color: rgba(var(--fg-rgb),0.35);
+  color: rgba(var(--fg-rgb),0.78);
 }
-.owned-import-drop strong { color: #cfe9c8; }
+.owned-import-drop strong { color: var(--accent-ink); }

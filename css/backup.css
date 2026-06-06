@@ -2,22 +2,22 @@
    Magic Garden Journal — css/backup.css  (v0.7.2)
    ═══════════════════════════════════════════════ */
 .bk-wrap { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.9rem; }
-.bk-title { font-family: var(--font-display); font-size: 1.5rem; color: #fff; margin: 0; }
-.bk-intro { font-size: 0.86rem; color: rgba(255,255,255,0.55); margin: 0; line-height: 1.55; }
+.bk-title { font-family: var(--font-display); font-size: 1.5rem; color: var(--fg-strong); margin: 0; }
+.bk-intro { font-size: 0.86rem; color: rgba(var(--fg-rgb),0.55); margin: 0; line-height: 1.55; }
 .bk-card {
-  background: var(--bg-2); border: 1px solid rgba(255,255,255,0.07);
+  background: var(--bg-2); border: 1px solid rgba(var(--fg-rgb),0.07);
   border-radius: var(--radius-sm); padding: 1rem 1.1rem;
   display: flex; flex-direction: column; gap: 0.75rem;
 }
-.bk-card-title { font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.9); margin: 0; }
-.bk-note { font-size: 0.78rem; color: rgba(255,255,255,0.5); margin: 0; line-height: 1.5; }
+.bk-card-title { font-size: 1rem; font-weight: 600; color: rgba(var(--fg-rgb),0.9); margin: 0; }
+.bk-note { font-size: 0.78rem; color: rgba(var(--fg-rgb),0.5); margin: 0; line-height: 1.5; }
 .bk-checks { display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem; }
 .bk-check {
   display: inline-flex; align-items: center; gap: 0.4rem;
-  font-size: 0.82rem; color: rgba(255,255,255,0.75); cursor: pointer;
+  font-size: 0.82rem; color: rgba(var(--fg-rgb),0.75); cursor: pointer;
 }
 .bk-check input { accent-color: var(--green-light); }
 .bk-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
-.bk-status { font-size: 0.78rem; color: #cfe9c8; min-height: 1em; line-height: 1.5; }
-.bk-status.err { color: #ffb4ab; }
+.bk-status { font-size: 0.78rem; color: var(--accent-ink); min-height: 1em; line-height: 1.5; }
+.bk-status.err { color: var(--danger-ink); }
 .bk-status:empty { display: none; }

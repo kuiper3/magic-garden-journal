@@ -1,279 +1,152 @@
-# AI Handoff — Magic Garden Journal
+# AI_HANDOFF.md — Magic Garden Journal
 
-> **⚡ 0.7.x ADDENDUM (2026-06-06) — read this first.** The project is now at **v0.8.0** (sidebar overhaul: collapsible desktop rail + mobile slide-over drawer, Settings hub at `/settings` holding Guide/Backup/Sign-out, cache headers fixed to must-revalidate);
-> sections below describing 0.6.x are historical. Current state: **Owned Pets** section
-> live (`/owned`) with the strength model (`actual = base × strength/100`, levels 50–max /
-> 80–100, abilities stored as key arrays) — engine in `js/pages/owned-pets-abilities.js`,
-> magnitudes in `ABILITY_MAGNITUDE` (aries.js untouched). Migrations `0.7.0_owned_pets.sql`
-> + `0.7.1_owned_pets_strength.sql` are applied. v0.7.2 adds JSON pet import
-> (`owned-pets-import.js`, accepts GardenPilot `inventory.getPets()` output incl. its
-> `{item,…}` wrapper), a **Guide** page (`/guide`), a **Backup** export/import page
-> (`/backup`), and `tools/mg-pet-exporter.user.js` (standalone exporter, not live-verified).
-> Game pet objects carry NO strength/weight fields — imports default 100/100. Full details:
-> `docs/OWNED_PETS_0.7.0_INTEGRATION.md` and `CHANGELOG.md`.
+> **Doc version 1.0.0 · Project v0.9.0 · Updated 2026-06-06.**
+> Read this first when resuming in a fresh chat. Companions: `ARCHITECTURE.md`
+> (older, partially superseded by this file), `CHANGELOG.md` (authoritative
+> release history), `ROADMAP.md`, `docs/OWNED_PETS_0.7.0_INTEGRATION.md`.
 
+## What this is
 
+Personal, password-protected tracker for crop & pet variants in **Magic Garden**
+(magicgarden.gg — a web game, NOT Roblox). Owner: Shawn (kuiper3).
 
-> **Internal doc version:** `0.5.2` · **Last updated:** 2026-05-22
-> **Project version:** `0.6.2`
+- **Repo:** github.com/kuiper3/magic-garden-journal · **Live:** magic-garden-journal.vercel.app
+- The old `kuiper3/mgclaude` repo is DEAD — never reference it.
+- **Stack:** vanilla JS ES modules, plain CSS, no build step. Supabase (auth + DB),
+  Vercel (static hosting via GitHub integration), AriesMod API (`mg-api.ariedam.fr`)
+  for all game data/sprites.
+- Separate sibling projects (different repos/chats, do NOT mix in):
+  **GardenPilot** (Tampermonkey bot for the game), **Stock Tracker + Alexa bridge**
+  (planned next).
 
----
+## Non-negotiable working rules (owner-stated, learned the hard way)
 
-## 1. Project snapshot
+1. **Fetch the live repo before patching** — never assume codebase state.
+   Use `https://raw.githubusercontent.com/kuiper3/magic-garden-journal/main/<path>`
+   or `codeload.github.com/...zip/refs/heads/main` for the whole tree.
+2. **Patch, don't rewrite** working files. Verify python/sed string replaces with
+   grep afterward — silent no-op replaces have shipped real bugs twice.
+3. **Deliverables are full zips** named `YYYY-MM-DD-HHMM_MagicGardenJournal-vX-Y-Z.zip`
+   — timestamp MUST be **Eastern Time** (`TZ='America/New_York' date +%Y-%m-%d-%H%M`).
+   Inner folder `magic-garden-journal/`; owner pushes contents to repo root.
+4. **Bump `package.json` + nav version string + CHANGELOG entry every delivery.**
+   Version strings live in: `package.json`, `js/app.js` (nav), `js/pages/settings.js`.
+5. Keep files under ~250 lines; new pages mirror existing page architecture.
+6. Verify game constants against AriesMod data, never from memory.
+   (API uses `"Mythic"` not `"Mythical"`; FourLeafClover rarity is Legendary; etc.)
+7. **Database changes are manual**: write `migrations/*.sql`, owner pastes into the
+   Supabase SQL editor. Vercel only deploys static files. Make migrations idempotent.
+8. Guard new Supabase queries so pages don't break if a migration hasn't run yet.
 
-- **Owner:** Shawn (GitHub: `kuiper3`)
-- **Repo:** https://github.com/kuiper3/magic-garden-journal
-- **Live:** https://magic-garden-journal.vercel.app
-- **Current version:** `0.6.2` — Mutations: all 4 variants, egg filter; ability descriptions; plant card timing
-- **Next milestone:** `0.6.3` — Eggs Explorer tab + per-pet feeding values (see §10–11)
+## Architecture map
 
----
+- `index.html` — auth gate + app shell. Head: early-theme script (`mgj_theme`
+  localStorage → `<html data-theme>` before paint), preconnects, ALL page CSS
+  preloaded, modulepreloads. SPA rewrite via `vercel.json`.
+- `js/app.js` — router (`ROUTES` map → dynamic import; pages export
+  `render(el)` / optional `init()` / `destroy()`), sidebar render, `navigate()`
+  (exported), auth gating. Sidebar: SVG logo + wordmark; colored line icons
+  (`NAV_ICONS`/`NAV_ICON_COLORS`); collapsible desktop rail
+  (localStorage `mgj_nav_collapsed`); mobile slide-over drawer (☰ button +
+  backdrop, closes on navigate). Routes: /plants /pets /owned /settings /guide /backup.
+- `js/lib/` — `aries.js` (game data fetch + `ABILITY_STATIC_DATA`,
+  `CROP_STATIC_DATA`, `PET_FEED_BASE`, sprite helpers — **do not modify**, Pets
+  discovery page depends on it; extend via separate modules), `supabase.js`
+  (`getSupabase()`), `auth.js`, `cache.js`, `icons.js`.
+- `js/pages/` — plants*(4 files), pets*(4), owned-pets.js (orchestrator),
+  owned-pets-card.js, owned-pets-form.js, owned-pets-abilities.js (strength-scaling
+  engine + `ABILITY_MAGNITUDE`), owned-pets-strength.js (game-formula computation),
+  owned-pets-import.js (JSON import modal), settings.js (themes, guide/backup links,
+  account/sign-out, danger zone), guide.js, backup.js.
+- `css/` — main.css (tokens + **4 themes**), nav.css, plants.css (shared component
+  classes: modal, toolbar, search, pills — pets/owned pages reuse it), pets.css,
+  owned-pets.css, guide.css, backup.css, settings.css.
+- `tools/mg-pet-exporter.user.js` — standalone Tampermonkey exporter (read-only WS
+  tap, deep-scans Welcome for the user's pets, 🐾 button → JSON). LIVE-VERIFIED.
+- `api/config.js` — Vercel serverless: serves SUPABASE_URL/ANON_KEY env to client.
 
-## 2. Architecture
+## Theming (v0.9.0)
 
-Static site → Vercel. Auth + DB → Supabase. Game data → AriesMod API. No backend.
+All CSS uses tokens; **no hardcoded white-alpha text remains** (mechanically
+refactored: `rgba(255,255,255,a)` → `rgba(var(--fg-rgb),a)`,
+`rgba(90,154,110,a)` → `rgba(var(--accent-rgb),a)`, pale-green/red inks →
+`var(--accent-ink[-strong])`/`var(--danger-ink)`/`var(--warn-ink)`).
+Themes = `[data-theme]` blocks at the END of main.css: **forest** (default dark
+green), **midnight** (dark blue), **parchment** (warm light), **meadow** (cool
+light). Selected in Settings; persisted `mgj_theme`; applied pre-paint by the
+index.html head script. When adding CSS: use the tokens, never raw white-alpha.
+The auth gate uses its own `--surface/--text` family — leave it alone.
 
-```
-Browser
- ├─ /api/config.js  (Vercel fn — exposes SUPABASE_URL + SUPABASE_ANON_KEY)
- ├─ Supabase        (signInWithPassword, journal_entries RLS)
- └─ mg-api.ariedam.fr
-     ├─ /data/plants|pets|mutations|eggs|abilities|weathers  (1hr cache)
-     └─ /assets/sprites/composed?key=sprite/plant/<Name>&mutations=<Mut>
-```
+## Data model (Supabase, RLS on user_id everywhere)
 
----
+- `journal_entries (user_id, item_type 'crop'|'pet', item_key, variant_key)` —
+  one row per discovered variant. Upsert with
+  `onConflict:'user_id,item_type,item_key,variant_key', ignoreDuplicates:true`.
+- `owned_pets (id, user_id, pet_key, nickname, weight_kg, variant
+  Normal|Gold|Rainbow, current_level 50–100, max_level 80–100 ≥ current,
+  abilities jsonb = array of PascalCase ability keys, created_at)`.
+  Migrations: `0.7.0_owned_pets.sql` then `0.7.1_owned_pets_strength.sql` (both applied).
 
-## 3. File layout
+## The strength model (CRITICAL domain knowledge)
 
-```
-api/config.js               Vercel fn — exposes public Supabase env vars
-css/main.css                Auth gate, shared vars
-css/nav.css                 Sidebar + mobile bottom bar + version tag
-css/plants.css              Full plants page (cards, modal, conditions, list)
-css/pets.css                Pets page — diet chips, ability list, grids (loads w/ plants.css)
-js/app.js                   Router, nav, auth bootstrap, version string
-js/lib/
-  aries.js                  ALL constants + API client (single source of truth)
-  icons.js                  Acquisition badges, formatters, seedFinderNote
-  auth.js                   Supabase auth wrappers
-  cache.js                  localStorage TTL cache
-  supabase.js               Supabase client factory
-js/pages/
-  plants.js                 Orchestrator — tabs, toolbar, state (persists across nav)
-  plants-grid.js            buildCard(), buildRow(), filterPlants()
-  plants-modal.js           Modal, Check/Clear All, upsert toggle, variant tiles
-  plants-conditions.js      Conditions grid — clickable, opens plant modal
-  pets.js                   Orchestrator — grid, Egg/A–Z sort, modal, progress
-  pets-grid.js              buildPetCard(), buildPetRow(), filterPets()
-  pets-modal.js             Modal — Egg→Pet stages, diet chips, abilities, 4 variant tiles
-  pets-conditions.js        Mutations tab — all 4 variants, egg multi-select filter
-index.html                  Shell only
-package.json                type:module, version 0.5.9
-```
+Every ability stat scales `actual = base × (strength/100)` — both proc rate AND
+effect magnitude. Engine: `owned-pets-abilities.js` (`abilityFacets`/`facetValue`;
+keys arrive PascalCase like `CoinFinderIII`, static tables are keyed by display
+name — always resolve the name first).
 
----
-
-## 4. Critical constants in aries.js (sourced from mg-data.json)
-
-### CROP_VARIANTS (12, in journal order)
-`Normal, Wet, Chilled, Frozen, Dawnlit, Amberlit, Thunderstruck, Gold, Rainbow, Dawnbound, Amberbound, MaxWeight`
-
-### MUTATION_API_NAME — display name → composed endpoint param
-| Display | API param |
-|---|---|
-| Amberlit | `Ambershine` |
-| Dawnbound | `Dawncharged` |
-| Amberbound | `Ambercharged` |
-| All others | same as display name |
-
-### PLANT_SPRITE_KEY — API key → sprite filename stem
-| API key | Sprite stem |
-|---|---|
-| `OrangeTulip` | `Tulip` |
-| `Clover` | `CloverThreeLeaf` |
-| `FourLeafClover` | `CloverFourLeaf` |
-| `Rose` | `RoseRed` |
-| `PurpleDaisy` | `DaisyPurple` |
-| `DawnCelestial` | `DawnCelestialCrop` |
-| `MoonCelestial` | `MoonCelestialCrop` |
-All other API keys match their sprite filename directly.
-
-### CROP_RARITY (from mg-data.json)
-- API uses `"Mythic"` not `"Mythical"` — everywhere in code uses `Mythic`
-- `FourLeafClover` → `Legendary` (not Uncommon)
-- `PurpleDaisy` → `Legendary`
-
-### CROP_STATIC_DATA (wiki-sourced, all 54 crops)
-Fields: `grow` (s), `regrow` (s|null), `baseWeight` (kg), `maxWeight` (kg)
-Used by modal since the API doesn't reliably return these fields.
-maxWeight = baseWeight × maxScale (Aries explorer "Max Scale" column).
-
-### composedSpriteUrl(cropKey, variant)
-Uses `PLANT_SPRITE_KEY[cropKey] ?? cropKey` for the stem.
-`sprite/plant/<stem>` — server auto-detects tall plants, no `tallplant` needed.
-
----
-
-## 5. Supabase schema
-
-```sql
-create table public.journal_entries (
-  id            uuid primary key default gen_random_uuid(),
-  user_id       uuid not null references auth.users(id) on delete cascade,
-  item_type     text not null check (item_type in ('crop', 'pet')),
-  item_key      text not null,    -- API key e.g. 'FourLeafClover', 'OrangeTulip'
-  variant_key   text not null,    -- e.g. 'Gold', 'Dawnlit', 'MaxWeight'
-  discovered_at timestamptz not null default now(),
-  unique (user_id, item_type, item_key, variant_key)
-);
--- RLS: all ops restricted to auth.uid() = user_id
-```
-
-**Always `upsert` with `ignoreDuplicates:true`** — bare `insert` on existing row throws
-unique constraint → optimistic UI reverts.
-
----
-
-## 6. State persistence across navigation
-
-`plants.js` keeps module-level state (`_activeTab`, `_sortMode`, `_viewMode`, `_search`,
-`_missingOnly`, `_plants`, `_discovered`). When the user navigates away and back, `render()`
-is called again but state variables persist — the template now reads these variables so
-tabs, sort, view, and filter buttons correctly reflect state on re-mount.
-
----
-
-## 7. Lessons (do not relearn)
-
-1. **Upsert not insert** — unique constraint causes optimistic UI revert
-2. **PLANT_SPRITE_KEY** — must use sprite stem, not API key, for composed endpoint
-3. **Rarity is `Mythic`** — not `Mythical` anywhere in code, CSS, or sprite filenames
-4. **Composed endpoint auto-handles tall plants** — always use `sprite/plant/`
-5. **FourLeafClover rarity = Legendary** (not Uncommon, verified from API)
-6. **`mg-data.json`** — uploaded by Shawn from browser console dump. Ground truth.
-   Path in Claude sessions: `/mnt/user-data/uploads/mg-data.json`
-7. **Inline comments eat closing braces** — `{ return x; // comment }` is broken JS.
-   Always put the `}` on its own line when a comment is present.
-8. **`type: "module"` in package.json** — suppresses Vercel ESM→CJS warning for api/config.js
-9. **Pet composed sprites** — derive the stem from `pet.sprite`'s filename, not the API
-   key. `petSpriteStem()` strips the `?v=` query + extension. `PET_SPRITE_KEY` is an
-   override map only (empty unless a specific pet's Gold/Rainbow sprite 404s).
-10. **Pet display names** — keys are PascalCase; `petDisplayName()` inserts spaces
-    (`WhiteCaribou` → "White Caribou"). Prefer an API `name` field if one ever appears.
-
----
-
-## 8. Pets page (0.6.0) — shipped
-
-- **Data:** `getPetsSorted()` in `aries.js` returns pets keyed from `/data/pets`,
-  each annotated with `eggName` + `eggPrice` (cheapest egg whose `faunaSpawnWeights`
-  includes the pet). Default sort = egg price; A–Z re-sorts by display name.
-- **Sprites:** `composedPetSpriteUrl(pet, variant)` — Normal/MaxWeight use the base
-  `pet.sprite`; Gold/Rainbow hit `sprite/pet/<stem>&mutations=<Gold|Rainbow>`.
-  `<stem>` is parsed from the pet's own `sprite` URL (`petSpriteStem`), so no
-  hardcoded key map is needed. `PET_SPRITE_KEY` exists as an override only.
-- **Modal** shows: Egg → Pet stages, egg source + price, rarity, hours to mature,
-  diet (crop chips — sprites pulled from cached `/data/plants`), innate abilities
-  (name + trigger + weighted % share + description from `/data/abilities`), and the
-  4 variant tiles. Tile toggles upsert/delete `journal_entries` with `item_type='pet'`.
-- **4 variants:** Normal, Gold, Rainbow, MaxWeight (`PET_VARIANTS`).
-- **No schema migration** — `item_type='pet'` was already in the CHECK constraint.
-
-### Deferred to 0.6.1
-- **Owned Pets sub-tab** — individual instances (name, weight, abilities). Does NOT
-  fit `journal_entries` (one row per *discovery*, not per *instance*). Needs a new
-  table, e.g.:
-  ```sql
-  create table public.owned_pets (
-    id         uuid primary key default gen_random_uuid(),
-    user_id    uuid not null references auth.users(id) on delete cascade,
-    pet_key    text not null,         -- API key, e.g. 'SnowFox'
-    nickname   text,
-    weight_kg  numeric,
-    variant    text,                  -- Normal | Gold | Rainbow
-    abilities  jsonb,                 -- chosen/rolled abilities
-    created_at timestamptz not null default now()
-  );
-  -- RLS: all ops where auth.uid() = user_id
-  ```
-- **Pet Conditions tab** — only Gold + Rainbow qualify; deferred (low value).
-
----
-
-## 9. How to start a new session
-
-1. Read this file.
-2. Check `CHANGELOG.md` for latest shipped version.
-3. Ask Shawn what milestone we're on and what's blocking.
-4. Never assume codebase state — ask to paste or reference GitHub.
-5. Reference `mg-data.json` before hardcoding any game constant.
-
----
-
-## 10. Eggs Explorer tab (planned — 0.6.2)
-
-Goal: a tab (Ares-Explorer style) listing each egg and the pets it can hatch, with
-spawn %. **No manual data** — it comes from the live API.
-
-- Source: `/data/eggs` → `eggs[eggKey].faunaSpawnWeights` = `{ petKey: weight }`.
-- Spawn % for a pet in an egg = `weight / sum(all weights in that egg) * 100`.
-- Egg sprite + coin price already in the egg object (`sprite`, `coinPrice`).
-- Reuse the `getPetsSorted()` fetch; build per-egg cards → expandable pet rows.
-- Egg order (cheapest → priciest, or fixed): Common, Uncommon, Rare, Legendary,
-  Snow, Dawn, Horse, Mythical, Winter (9 — confirm against API keys).
-
-## 11. Per-pet feeding / hunger (planned — priority) — FORMULA SOLVED
-
-Shawn supplied 7 in-game feeding tables (one per rarity group: Common, Uncommon,
-Rare, Legendary, Snow, Horse, Mythical). Each pet block = its diet crops down the
-left, with a value matrix. **The matrix is a formula, not 20 independent numbers:**
+Strength is NOT stored by the game; it's **derived** (source: GitHub
+`Ariedam64/MG-AriesMod`, `src/utils/petCalcul.ts`):
 
 ```
-hunger%(pet, crop, weather, colMut) = base(pet,crop) × (weatherMult + colMult − 1)
-                                       , then capped at 100%
+maxStrength = floor( 20 × (targetScale−1)/(maxScale−1) + 80 )        // 80–100
+xpComponent = min( floor( 30 × xp/(hoursToMature×3600) ), 30 )
+strength    = min( maxStrength−30 + xpComponent, maxStrength )        // starts max−30
 ```
 
-- **weatherMult** (the row labels): Normal ×1 · Wet/Chill ×2 · Thunder ×5 · Frozen ×6
-- **colMult** (the 5 columns, left→right): ×1 · ×4 · ×6 · ×7 · ×10
-  (columns are crop-mutation tiers — CONFIRM exact mutation identities next session)
-- Combine **additively** in multiplier space (verified, Worm+Carrot, base 4.0%):
-  - Wet × col2  → 4×(2+4−1)=20.0 ✓
-  - Thunder × col3 → 4×(5+6−1)=40.0 ✓
-  - Frozen × col5 → 4×(6+10−1)=60.0 ✓
-- Magenta "100%" cells = the cap (pet fully fed).
+`owned-pets-strength.js` implements this with a per-species
+`[maxScale, hoursToMature]` table (21 species, extracted from MG-AriesMod
+hardcoded data 2026-06-06); live API species fields preferred when present.
+Verified vs owner's pets: Butterfly(xp 727313, scale 2.4136) → 98/98;
+Squirrel(xp 57307, scale 1.6497) → 66/92.
 
-**Implication:** next session only needs the **base value** = the top-left
-(Normal weather, column 1) cell for each (pet, crop) pair — ~2–4 numbers per pet,
-not the whole grid. Plan: add `PET_FEED_BASE = { petKey: { cropKey: basePct } }` to
-aries.js, a `feedHunger(base, weather, colMut)` helper, and surface it in the modal's
-Diet section (each diet chip → its base %, with a small weather/mutation toggle).
-TODO: verify the column-mutation identities + that ×1/4/6/7/10 holds across all
-rarities (spot-checked Common + Snow; held).
+## Import / export flows
 
----
+- **Pet import** (Owned Pets → ⇪ Import JSON): paste, file-pick, or drop ANYWHERE
+  on the modal (window-level guards stop browser navigation; never re-introduce a
+  textarea exemption — files dropped on textareas navigate). Accepts raw game pet
+  arrays, `{pets:[…]}`, single objects, and GardenPilot's `{item,…}` wrapper.
+  Strength auto-computed when absent. Duplicates (species+nickname+ability set)
+  auto-skipped.
+- **Game-side export**: GardenPilot console
+  `copy(JSON.stringify(GardenPilot.inventory.getPets(), null, 2))`, or the
+  standalone userscript for non-GardenPilot users.
+- **Backup page**: exports/merges `{app:'magic-garden-journal', schema:1,
+  journal_entries, owned_pets}`; portable (ids/user_id stripped).
+- **Settings → Danger zone**: delete-all owned pets (count + two-step confirm) —
+  built for wipe-and-reimport testing loops.
 
-## 12. Owned Pets tab (planned — 0.7.0)
+## Deploy & ops
 
-This is a **separate nav section** ("Owned Pets"), not a sub-tab inside Pets.
-Key design decisions from Shawn:
-- Each pet owned is stored as an individual record: pet key, nickname, weight, variant, abilities, date added.
-- Pets page shows a **counter badge** per species ("You own 2 Bees"); clicking it
-  shows a small inline dropdown of that user's owned instances.
-- Ability proc % auto-calculated from the owned pet's rolled weights (formula in §11).
-- Schema (draft):
-  ```sql
-  create table public.owned_pets (
-    id         uuid primary key default gen_random_uuid(),
-    user_id    uuid not null references auth.users(id) on delete cascade,
-    pet_key    text not null,
-    nickname   text,
-    weight_kg  numeric,
-    variant    text,
-    abilities  jsonb,     -- {abilityKey: weight} from the actual rolled pet
-    created_at timestamptz default now()
-  );
-  -- RLS: auth.uid() = user_id
-  ```
-- Build order: Supabase migration → `owned-pets.js` + `owned-pets.css`.
-  Pets page gains a lightweight owned-count overlay fetched once on init.
+Push to main → Vercel auto-deploys. `vercel.json`: SPA rewrite + security headers +
+`Cache-Control: max-age=0, must-revalidate` on js/css (was 1h — caused repeated
+"my deploy isn't showing" incidents; do not raise it). Supabase migrations are
+manual (see rule 7). Game pets carry NO weight-kg field; `targetScale` is not kg —
+weight stays manual/optional.
+
+## Known deferred / next
+
+- **Google sign-in**: Supabase Dashboard → Auth → Providers → Google (needs Google
+  Cloud OAuth client). Code side is small (`signInWithOAuth`) + a button on the
+  auth gate. Owner wants this eventually.
+- Line icons beyond the nav (cards still use emojis); more theme polish if owner
+  requests after trying the four.
+- **Next project: Stock Tracker** (separate repo/chat — community-facing,
+  three-tier: self-hosted API fork → relay → user bridge, VoiceMonkey/Alexa).
+  Keep it OUT of this repo.
+
+## Verification habits
+
+`node --check` every edited JS file; grep-verify every scripted string replace;
+all route targets must exist; test the strength math against known pets when
+touching it. After deploy: hard-refresh once, nav badge should show the new
+version.
