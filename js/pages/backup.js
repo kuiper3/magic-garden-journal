@@ -15,10 +15,12 @@ import { abilityKeys, clampMaxLevel, clampCurLevel } from './owned-pets-abilitie
 const APP_TAG = 'magic-garden-journal';
 let _parsed = null;
 
-// Stop the browser navigating to a file dropped outside the drop zone.
+// Never let the browser navigate to a dropped file while this page is open.
 function _blockWindowDrop(e) {
-  if (e.target.closest?.('#bk-drop, #bk-text')) return;
   e.preventDefault();
+  if (e.type === 'dragover' && e.dataTransfer && !e.target.closest?.('#bk-import-card')) {
+    e.dataTransfer.dropEffect = 'none';
+  }
 }
 
 export function render(container) {
@@ -41,7 +43,7 @@ export function render(container) {
         <div class="bk-status" id="bk-ex-status"></div>
       </section>
 
-      <section class="bk-card">
+      <section class="bk-card" id="bk-import-card">
         <h3 class="bk-card-title">Import</h3>
         <p class="bk-note">Merges a backup file into this account. Nothing is deleted; entries you
         already have are skipped.</p>
@@ -64,13 +66,24 @@ export function init() {
   document.getElementById('bk-export')?.addEventListener('click', doExport);
   document.getElementById('bk-preview')?.addEventListener('click', doPreview);
   document.getElementById('bk-import')?.addEventListener('click', doImport);
+  const card = document.getElementById('bk-import-card');
   const drop = document.getElementById('bk-drop');
   const file = document.getElementById('bk-file');
   document.getElementById('bk-choose')?.addEventListener('click', () => file?.click());
   file?.addEventListener('change', () => loadFile(file.files?.[0]));
-  ['dragover', 'dragenter'].forEach(ev => drop?.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
-  ['dragleave', 'drop'].forEach(ev => drop?.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
-  drop?.addEventListener('drop', e => loadFile(e.dataTransfer?.files?.[0]));
+  card?.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+    drop?.classList.add('over');
+  });
+  card?.addEventListener('dragleave', e => {
+    if (!card.contains(e.relatedTarget)) drop?.classList.remove('over');
+  });
+  card?.addEventListener('drop', e => {
+    e.preventDefault();
+    drop?.classList.remove('over');
+    loadFile(e.dataTransfer?.files?.[0]);
+  });
   window.addEventListener('dragover', _blockWindowDrop);
   window.addEventListener('drop', _blockWindowDrop);
 }

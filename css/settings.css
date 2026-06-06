@@ -38,3 +38,27 @@
 .set-about { font-size: 0.8rem; color: rgba(255,255,255,0.55); line-height: 1.6; margin: 0; }
 .set-about a { color: var(--green-light); text-decoration: none; }
 .set-about a:hover { text-decoration: underline; }
+
+/* ── Danger zone ────────────────────────────── */
+.set-card--danger { border-color: rgba(192,57,43,0.35); }
+.set-danger-note { font-size: 0.78rem; color: rgba(255,255,255,0.55); line-height: 1.55; margin: 0; }
+.set-danger-note strong { color: #ffb4ab; }
+.set-del-owned {
+  align-self: flex-start;
+  background: rgba(192,57,43,0.15); border: 1px solid rgba(192,57,43,0.55);
+  color: #ffb4ab; border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-size: 0.82rem; font-weight: 600;
+  padding: 0.55rem 1rem; cursor: pointer; transition: all 0.15s;
+}
+.set-del-owned:hover:not(:disabled) { background: rgba(192,57,43,0.3); color: #fff; }
+.set-del-owned:disabled { opacity: 0.45; cursor: default; }
+.set-del-owned.armed {
+  background: rgba(192,57,43,0.45); border-color: #e74c3c; color: #fff;
+  animation: dangerPulse 1.1s ease-in-out infinite;
+}
+@keyframes dangerPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(231,76,60,0.4); }
+  50%      { box-shadow: 0 0 0 5px rgba(231,76,60,0); }
+}
+.set-status { font-size: 0.76rem; color: #cfe9c8; min-height: 1em; }
+.set-status:empty { display: none; }

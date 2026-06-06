@@ -5,6 +5,32 @@
 
 ---
 
+## [0.8.2] — 2026-06-06 *(Real strength on import)*
+
+### Added
+- **Imported pets get their real strength computed** instead of defaulting to 100/100.
+  The formula (from MG-AriesMod source, `src/utils/petCalcul.ts`):
+  `max = floor(20·(targetScale−1)/(maxScale−1) + 80)`;
+  `current = min(max, (max−30) + min(30, floor(30·xp/(hoursToMature·3600))))`.
+  Both inputs (`xp`, `targetScale`) are already in every game export. New module
+  `js/pages/owned-pets-strength.js` holds the formula + a per-species
+  `[maxScale, hoursToMature]` table (21 species; live API values preferred when
+  present). Import preview shows the computed values per pet.
+
+## [0.8.1] — 2026-06-06 *(Drop-anywhere import, delete-all owned pets)*
+
+### Added
+- **Settings → Danger zone**: "Delete all owned pets" with live count and a two-step
+  confirm (armed state auto-disarms after 6s). Discoveries untouched. For wiping
+  test data between JSON imports.
+
+### Fixed
+- **File drops still opened the JSON in the browser**: the 0.8.0 window guard
+  deliberately exempted the textarea so text-drops could insert — but a FILE dropped
+  on a textarea navigates instead. Now the entire import modal (and the Backup
+  import card) is the drop target — a file dropped anywhere on it loads; drops
+  anywhere else are neutralized and the cursor shows no-drop outside the modal.
+
 ## [0.8.0] — 2026-06-06 *(Sidebar overhaul, Settings hub, import fixes)*
 
 ### Added

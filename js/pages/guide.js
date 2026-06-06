@@ -45,8 +45,11 @@ export function render(container) {
         paste the JSON — then hit <strong>Preview</strong> to see what will be imported, and
         <strong>Import</strong>. Pets already in your tracker are skipped automatically, so
         re-importing after hatching new pets is safe.</p>
-        <p>One thing the game export doesn't include is <strong>strength</strong> — imported pets
-        default to 100/100. Tap ✎ on any pet afterward to set its real current and max strength.</p>
+        <p><strong>Strength is computed automatically on import.</strong> The game export carries
+        each pet's XP and rolled size, and the journal applies the game's own formula: max strength
+        comes from the size roll (80–100), and current strength climbs from max−30 toward max as the
+        pet matures. The preview shows the computed values per pet, and you can still tap ✎ to
+        adjust any pet afterward.</p>
       </section>
 
       <section class="guide-sec">

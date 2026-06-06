@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/app.js
-// v0.5.0 — router + sidebar (v0.8.0 nav string)
+// v0.5.0 — router + sidebar (v0.8.2 nav string)
 // ═══════════════════════════════════════════════
 // Sidebar: collapsible icon rail on desktop (chevron, persisted), slide-over
 // drawer on mobile (☰ button + backdrop, closes on navigate/tap-off).
@@ -52,7 +52,7 @@ function renderNav() {
         ${LOGO_SVG}
         <span class="brand-text">
           <span class="brand-eyebrow">Magic Garden</span>
-          <span class="brand-name">Journal <span class="nav-version">v0.8.0</span></span>
+          <span class="brand-name">Journal <span class="nav-version">v0.8.2</span></span>
         </span>
       </a>
       <button class="nav-collapse" id="nav-collapse" title="Collapse sidebar" aria-label="Toggle sidebar">‹</button>

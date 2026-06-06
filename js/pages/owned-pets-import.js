@@ -19,14 +19,19 @@
 import { getSupabase } from '../lib/supabase.js';
 import { petDisplayName } from './pets-grid.js';
 import { clampMaxLevel, clampCurLevel, abilityKeys } from './owned-pets-abilities.js';
+import { computeGameStrength } from './owned-pets-strength.js';
 
 let _imp = null;
 
-// While the modal is open, stop the browser from navigating to a dropped file
-// when it lands outside the drop zone (default behavior opens the JSON in a tab).
+// While the modal is open, the browser must NEVER navigate to a dropped file.
+// preventDefault unconditionally; the modal-card handler (capture order: card
+// fires first, then this) decides whether the drop actually loads. Outside the
+// modal the cursor shows no-drop.
 function _blockWindowDrop(e) {
-  if (e.target.closest?.('#oi-drop, #oi-text')) return; // zone/textarea handle it
   e.preventDefault();
+  if (e.type === 'dragover' && e.dataTransfer && !e.target.closest?.('#owned-import')) {
+    e.dataTransfer.dropEffect = 'none';
+  }
 }
 
 export function openOwnedImport({ allPets = [], abilityLookup = {}, existingRows = [], onSaved } = {}) {
@@ -92,19 +97,28 @@ export function closeOwnedImport() {
 function onKeydown(e) { if (e.key === 'Escape') closeOwnedImport(); }
 
 // File drop / picker → fill the textarea, then auto-preview.
+// The ENTIRE modal card accepts drops (zone, textarea, anywhere) — a file
+// dropped a few pixels off the dashed box must still load, never navigate.
 function bindFileDrop() {
+  const card = document.querySelector('#owned-import .owned-form-card');
   const drop = document.getElementById('oi-drop');
   const file = document.getElementById('oi-file');
-  if (!drop || !file) return;
+  if (!card || !file) return;
   document.getElementById('oi-choose')?.addEventListener('click', () => file.click());
   file.addEventListener('change', () => loadFile(file.files?.[0]));
-  ['dragover', 'dragenter'].forEach(ev => drop.addEventListener(ev, e => {
-    e.preventDefault(); drop.classList.add('over');
-  }));
-  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => {
-    e.preventDefault(); drop.classList.remove('over');
-  }));
-  drop.addEventListener('drop', e => loadFile(e.dataTransfer?.files?.[0]));
+  card.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+    drop?.classList.add('over');
+  });
+  card.addEventListener('dragleave', e => {
+    if (!card.contains(e.relatedTarget)) drop?.classList.remove('over');
+  });
+  card.addEventListener('drop', e => {
+    e.preventDefault();
+    drop?.classList.remove('over');
+    loadFile(e.dataTransfer?.files?.[0]);
+  });
 }
 
 async function loadFile(f) {
@@ -145,8 +159,13 @@ function mapPet(raw) {
   const abilities = (Array.isArray(raw.abilities) ? raw.abilities : []).filter(a => typeof a === 'string');
   const maxRaw = firstNum(raw.max_level, raw.maxLevel, raw.maxStrength, raw.max_strength, raw.potential);
   const curRaw = firstNum(raw.current_level, raw.currentLevel, raw.strength, raw.currentStrength, raw.level);
-  const max_level = clampMaxLevel(maxRaw ?? 100);
-  const current_level = clampCurLevel(curRaw ?? max_level, max_level);
+  // No explicit strength fields (game exports never have them) → compute the
+  // real values from xp + targetScale via the game's own formula.
+  const computed = (maxRaw == null && curRaw == null)
+    ? computeGameStrength(raw, _imp.byKey[petKey])
+    : null;
+  const max_level = clampMaxLevel(maxRaw ?? computed?.max_level ?? 100);
+  const current_level = clampCurLevel(curRaw ?? computed?.current_level ?? max_level, max_level);
   const weight = firstNum(raw.weight_kg, raw.weightKg, raw.weight);
 
   const payload = {
@@ -165,7 +184,10 @@ function mapPet(raw) {
   const unknownAb = abilities.filter(a => !_imp.abilityLookup[a]);
   if (unknownAb.length) notes.push(`unrecognized: ${unknownAb.join(', ')}`);
   if (droppedMuts.length) notes.push(`mutations ignored: ${droppedMuts.join(', ')}`);
-  if (maxRaw == null && curRaw == null) notes.push('no strength fields — defaulted 100/100');
+  if (maxRaw == null && curRaw == null) {
+    notes.push(computed ? `strength ${computed.current_level}/${computed.max_level} computed from XP & size`
+                        : 'no strength data — defaulted 100/100');
+  }
   const dup = _imp.existingSig.has(rowSignature(payload));
   return { payload, notes, dup };
 }

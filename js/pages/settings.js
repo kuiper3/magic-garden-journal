@@ -7,7 +7,7 @@ import { navigate } from '../app.js';
 import { signOut } from '../lib/auth.js';
 import { getSupabase } from '../lib/supabase.js';
 
-const VERSION = '0.8.0';
+const VERSION = '0.8.2';
 const REPO    = 'https://github.com/kuiper3/magic-garden-journal';
 
 export function render(container) {
@@ -42,6 +42,15 @@ export function render(container) {
           <span class="set-email" id="set-email">…</span>
           <button class="set-signout" id="set-signout">Sign out</button>
         </div>
+      </section>
+
+      <section class="set-card set-card--danger">
+        <h3 class="set-card-title">Danger zone</h3>
+        <p class="set-danger-note">Permanently deletes <strong>every pet in your Owned Pets
+        list</strong> — useful when testing imports. Plant and pet <em>discoveries</em> are not
+        touched. There is no undo.</p>
+        <button class="set-del-owned" id="set-del-owned" disabled>Delete all owned pets…</button>
+        <div class="set-status" id="set-del-status"></div>
       </section>
 
       <section class="set-card">
@@ -80,6 +89,73 @@ export async function init() {
     const el = document.getElementById('set-email');
     if (el) el.textContent = 'Signed in';
   }
+
+  initDangerZone();
+}
+
+// ── Danger zone: delete all owned pets ────────
+// Two-step confirm: first click arms the button (auto-disarms after 6s),
+// second click deletes. Shows the live row count so it's clear what's at stake.
+async function initDangerZone() {
+  const btn = document.getElementById('set-del-owned');
+  const status = document.getElementById('set-del-status');
+  if (!btn) return;
+  let count = 0;
+  let disarmTimer = null;
+
+  const baseLabel = () => `Delete all owned pets (${count})`;
+
+  try {
+    const supabase = await getSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not signed in.');
+    const { count: c, error } = await supabase.from('owned_pets')
+      .select('id', { count: 'exact', head: true }).eq('user_id', user.id);
+    if (error) throw error;
+    count = c ?? 0;
+    btn.textContent = baseLabel();
+    btn.disabled = count === 0;
+    if (count === 0 && status) status.textContent = 'Nothing to delete — your Owned Pets list is empty.';
+  } catch (err) {
+    console.error('[settings] count failed:', err);
+    if (status) status.textContent = 'Could not load your owned-pet count.';
+    return;
+  }
+
+  btn.addEventListener('click', async () => {
+    if (btn.dataset.arm !== '1') {
+      btn.dataset.arm = '1';
+      btn.classList.add('armed');
+      btn.textContent = `⚠ Click again to permanently delete ${count} pet${count === 1 ? '' : 's'}`;
+      disarmTimer = setTimeout(() => {
+        btn.dataset.arm = '';
+        btn.classList.remove('armed');
+        btn.textContent = baseLabel();
+      }, 6000);
+      return;
+    }
+    clearTimeout(disarmTimer);
+    btn.disabled = true;
+    btn.textContent = 'Deleting…';
+    try {
+      const supabase = await getSupabase();
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase.from('owned_pets').delete().eq('user_id', user.id);
+      if (error) throw error;
+      if (status) status.textContent = `Deleted ${count} pet${count === 1 ? '' : 's'} ✓`;
+      count = 0;
+      btn.dataset.arm = '';
+      btn.classList.remove('armed');
+      btn.textContent = baseLabel();
+    } catch (err) {
+      console.error('[settings] delete-all failed:', err);
+      if (status) status.textContent = `Delete failed: ${err.message}`;
+      btn.disabled = false;
+      btn.dataset.arm = '';
+      btn.classList.remove('armed');
+      btn.textContent = baseLabel();
+    }
+  });
 }
 
 export function destroy() {}
