@@ -1,6 +1,6 @@
 # Magic Garden Journal
 
-> **Internal doc version:** `0.4.0` · **Project:** `v0.5.9` · **Updated:** 2026-05-17
+> **Internal doc version:** `0.4.0` · **Project:** `v0.7.2` · **Updated:** 2026-06-06
 
 Personal, password-protected tracker for crop and pet variants in [Magic Garden](https://magicgarden.gg).
 
@@ -8,7 +8,7 @@ Personal, password-protected tracker for crop and pet variants in [Magic Garden]
 
 ---
 
-## Features (v0.5.9)
+## Features (v0.7.2)
 
 - **54 crops** in Garden Journal order with Seed → Plant → Crop stage display
 - **Card + List views** — real rarity icon PNGs, coin icon, stage sprites from AriesMod
@@ -21,6 +21,9 @@ Personal, password-protected tracker for crop and pet variants in [Magic Garden]
 - **Seed Finder** ability tier shown per crop
 - Tab + toolbar state persists when navigating away and back
 - Syncs across devices via Supabase
+- **Owned Pets** — track your actual pets with strength-scaled ability values (current → max)
+- **Import pets** from the game as JSON (GardenPilot export or the standalone `tools/mg-pet-exporter.user.js`)
+- **Guide** page with full instructions · **Backup** page to export/import all progress
 
 ---
 

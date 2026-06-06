@@ -91,11 +91,21 @@ function fmtNum(n, big) {
   return String(Number(n.toFixed(2)));
 }
 
+// PascalCase API key → spaced display name ('CoinFinderIII' → 'Coin Finder III').
+function prettifyKey(str) {
+  return String(str ?? '')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2');
+}
+
 // Build the (strength-independent) facet list for an ability.
 // Returns { name, weather, facets:[{ label, kind, base, unit, fmt, big }] }.
+// NOTE: ability keys arrive as PascalCase API keys ('EggGrowthBoostI'), but
+// ABILITY_STATIC_DATA and ABILITY_MAGNITUDE are keyed by display name
+// ('Egg Growth Boost I') — resolve the name first, then index.
 export function abilityFacets(key, abilityLookup = {}) {
-  const stat = ABILITY_STATIC_DATA[key] ?? {};
-  const name = abilityLookup[key]?.name ?? key;
+  const name = abilityLookup[key]?.name ?? prettifyKey(key);
+  const stat = ABILITY_STATIC_DATA[name] ?? ABILITY_STATIC_DATA[key] ?? {};
   const facets = [];
 
   // Proc-rate facet (omitted for passive abilities, which are always-on).
@@ -108,7 +118,7 @@ export function abilityFacets(key, abilityLookup = {}) {
   }
 
   // Effect-magnitude facet.
-  const mag = ABILITY_MAGNITUDE[key];
+  const mag = ABILITY_MAGNITUDE[name] ?? ABILITY_MAGNITUDE[key];
   if (mag) {
     facets.push({ label: 'Effect', kind: 'mul', base: mag.val, fmt: mag.fmt, big: mag.big });
   } else if (stat.effectTemplate && !stat.effectBase) {

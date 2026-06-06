@@ -1,5 +1,19 @@
 # AI Handoff — Magic Garden Journal
 
+> **⚡ 0.7.x ADDENDUM (2026-06-06) — read this first.** The project is now at **v0.7.2**;
+> sections below describing 0.6.x are historical. Current state: **Owned Pets** section
+> live (`/owned`) with the strength model (`actual = base × strength/100`, levels 50–max /
+> 80–100, abilities stored as key arrays) — engine in `js/pages/owned-pets-abilities.js`,
+> magnitudes in `ABILITY_MAGNITUDE` (aries.js untouched). Migrations `0.7.0_owned_pets.sql`
+> + `0.7.1_owned_pets_strength.sql` are applied. v0.7.2 adds JSON pet import
+> (`owned-pets-import.js`, accepts GardenPilot `inventory.getPets()` output incl. its
+> `{item,…}` wrapper), a **Guide** page (`/guide`), a **Backup** export/import page
+> (`/backup`), and `tools/mg-pet-exporter.user.js` (standalone exporter, not live-verified).
+> Game pet objects carry NO strength/weight fields — imports default 100/100. Full details:
+> `docs/OWNED_PETS_0.7.0_INTEGRATION.md` and `CHANGELOG.md`.
+
+
+
 > **Internal doc version:** `0.5.2` · **Last updated:** 2026-05-22
 > **Project version:** `0.6.2`
 

@@ -253,3 +253,36 @@ select.owned-input { appearance: none; cursor: pointer; }
   .owned-form-grid3 .owned-input { padding: 0.5rem 0.4rem; }
   .toolbar-top { flex-wrap: wrap; }
 }
+
+/* ── JSON import modal (v0.7.2) ─────────────── */
+.owned-toolbar-btns { display: flex; gap: 0.45rem; }
+.owned-add-btn.ghost {
+  background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.7);
+}
+.owned-add-btn.ghost:hover { background: rgba(90,154,110,0.18); color: #fff; }
+.owned-import-hint { font-size: 0.76rem; color: rgba(255,255,255,0.5); margin: 0; line-height: 1.45; }
+.owned-import-hint code { font-size: 0.72rem; background: rgba(0,0,0,0.3); padding: 0.05rem 0.3rem; border-radius: 4px; }
+.owned-import-ta { font-family: monospace; font-size: 0.74rem; resize: vertical; min-height: 110px; }
+.owned-import-preview { display: flex; flex-direction: column; gap: 0.3rem; max-height: 240px; overflow-y: auto; }
+.owned-imp-summary { font-size: 0.78rem; font-weight: 600; color: #cfe9c8; margin-bottom: 0.15rem; }
+.owned-imp-row {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem;
+  background: rgba(0,0,0,0.18); border-radius: var(--radius-xs);
+  padding: 0.35rem 0.55rem; font-size: 0.74rem;
+}
+.owned-imp-row.dup { opacity: 0.45; }
+.owned-imp-row.err { color: #ffb4ab; }
+.owned-imp-name { color: rgba(255,255,255,0.85); font-weight: 600; }
+.owned-imp-name .muted { color: rgba(255,255,255,0.45); font-weight: 400; }
+.owned-imp-meta { color: rgba(255,255,255,0.55); font-variant-numeric: tabular-nums; }
+.owned-imp-note { color: #e0c36a; font-size: 0.68rem; }
+
+/* Import drop zone (v0.7.2) */
+.owned-import-drop {
+  display: flex; align-items: center; justify-content: center; gap: 0.6rem; flex-wrap: wrap;
+  border: 1.5px dashed rgba(255,255,255,0.18); border-radius: var(--radius-sm);
+  padding: 0.9rem 0.7rem; font-size: 0.76rem; color: rgba(255,255,255,0.5);
+  transition: border-color 0.15s, background 0.15s;
+}
+.owned-import-drop.over { border-color: var(--green-light); background: rgba(90,154,110,0.12); }

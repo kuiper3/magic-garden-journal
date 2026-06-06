@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/pages/owned-pets.js
-// v0.7.0 — orchestrator: owned-pet collection (own physical pets)
+// v0.7.2 — orchestrator: owned-pet collection (own physical pets)
 // ═══════════════════════════════════════════════
 // Separate nav section (NOT a sub-tab of Pets). One row per physical pet the
 // user owns. Discovery tracking lives on the Pets page; this tracks instances.
@@ -11,6 +11,7 @@ import { getSupabase } from '../lib/supabase.js';
 import { petDisplayName } from './pets-grid.js';
 import { buildOwnedCard } from './owned-pets-card.js';
 import { openOwnedForm, closeOwnedForm } from './owned-pets-form.js';
+import { openOwnedImport, closeOwnedImport } from './owned-pets-import.js';
 
 // ── State (persists across navigation, mirrors pets.js) ──
 let _allPets       = [];          // species list from getPetsSorted()
@@ -31,7 +32,10 @@ export function render(container) {
     <div class="plants-toolbar">
       <div class="toolbar-row toolbar-top">
         <h2 class="owned-page-title">Owned Pets <span class="owned-count-chip" id="owned-total">—</span></h2>
-        <button class="owned-add-btn" id="owned-add">＋ Add pet</button>
+        <div class="owned-toolbar-btns">
+          <button class="owned-add-btn ghost" id="owned-import">⇪ Import JSON</button>
+          <button class="owned-add-btn" id="owned-add">＋ Add pet</button>
+        </div>
       </div>
       <div class="toolbar-row toolbar-controls">
         <div class="search-wrap">
@@ -77,6 +81,7 @@ export async function init() {
 
 export function destroy() {
   closeOwnedForm();
+  closeOwnedImport();
   _allPets = []; _petsByKey = {}; _abilityLookup = {}; _rows = []; _user = null;
 }
 
@@ -85,7 +90,7 @@ export function destroy() {
 async function fetchOwnedRows(supabase, user) {
   if (!user) return [];
   const { data, error } = await supabase.from('owned_pets')
-    .select('id, pet_key, nickname, weight_kg, variant, abilities, created_at')
+    .select('id, pet_key, nickname, weight_kg, variant, current_level, max_level, abilities, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
   if (error) { console.warn('[owned-pets] fetch failed:', error.message); return []; }
@@ -185,6 +190,7 @@ function cardFor(row) {
 
 function bindToolbar() {
   document.getElementById('owned-add')?.addEventListener('click', openAdd);
+  document.getElementById('owned-import')?.addEventListener('click', openImport);
 
   document.getElementById('owned-search')?.addEventListener('input', e => {
     _search = e.target.value;
@@ -204,6 +210,15 @@ function bindToolbar() {
     const delId  = e.target.closest('[data-owned-del]')?.dataset.ownedDel;
     if (editId) { openEdit(editId); return; }
     if (delId)  { openEditForDelete(delId); return; }
+  });
+}
+
+function openImport() {
+  openOwnedImport({
+    allPets: _allPets,
+    abilityLookup: _abilityLookup,
+    existingRows: _rows,
+    onSaved: reload,
   });
 }
 

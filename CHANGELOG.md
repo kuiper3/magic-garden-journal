@@ -1,9 +1,47 @@
 # Changelog — Magic Garden Journal
 
-> **Internal doc version:** `0.5.2` · **Last updated:** 2026-05-22
+> **Internal doc version:** `0.6.0` · **Last updated:** 2026-06-06
 > Versions here track the **project** (package.json), not this document.
 
 ---
+
+## [0.7.2] — 2026-06-06 *(Pet import, Guide, Backup)*
+
+### Added
+- **Owned Pets → ⇪ Import JSON** — paste or drag-and-drop a pets export from the game
+  (GardenPilot's `inventory.getPets()` output, wrapper shape handled) with preview,
+  per-row warnings, and automatic duplicate skipping. `js/pages/owned-pets-import.js`.
+- **📖 Guide page** (`/guide`) — instructions for every section, including the
+  pet-export console command and the standalone exporter userscript.
+- **💾 Backup page** (`/backup`) — export plant/pet discoveries and owned pets to one
+  JSON file; import/merge a backup into any account (no duplicates created).
+- **`tools/mg-pet-exporter.user.js`** — standalone read-only Tampermonkey exporter for
+  users without GardenPilot (not yet live-verified).
+
+### Fixed
+- Ability values resolve PascalCase game keys (`CoinFinderIII`) against the
+  display-name-keyed static tables — cards no longer show "—".
+- Owned Pets row fetch now selects `current_level` / `max_level`.
+
+## [0.7.1] — 2026-06-05 *(Strength model)*
+
+### Changed
+- Owned pets now model **strength**: `actual = base × (strength/100)` applied to every
+  ability facet (proc rate AND effect magnitude). Pets store `current_level` (50–max)
+  and `max_level` (80–100); cards show each ability current → max.
+- Form rebuilt: strength steppers, multi-select ability chips from the species' innate
+  pool, live computed preview. `abilities` column is now an array of ability keys.
+- New `js/pages/owned-pets-abilities.js` — scaling engine + `ABILITY_MAGNITUDE` table
+  (magnitudes lifted from display text; `aries.js` untouched).
+- Migration `0.7.1_owned_pets_strength.sql` (run after 0.7.0).
+
+## [0.7.0] — 2026-06-04 *(Owned Pets)*
+
+### Added
+- **Owned Pets** section (`/owned`): one card per physical pet — species, nickname,
+  mutation (Normal/Gold/Rainbow), weight; add/edit/delete with Supabase persistence.
+- `owned_pets` table + RLS (`0.7.0_owned_pets.sql`).
+- Pets page: per-species owned-count badge with instance popover.
 
 ## [0.6.2] — 2026-05-22 *(Mutations + ability polish + plant card timing)*
 
