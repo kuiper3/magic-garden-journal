@@ -1,43 +1,37 @@
 /* ═══════════════════════════════════════════════
-   Magic Garden Journal — css/guide.css  (v0.7.2)
-   Guide / instructions page
+   Magic Garden Journal — css/guide.css  (v0.8.0)
+   Flat guide sections
    ═══════════════════════════════════════════════ */
-
-.guide-wrap { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.7rem; }
+.guide-wrap { max-width: 740px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.85rem; }
 .guide-title { font-family: var(--font-display); font-size: 1.5rem; color: #fff; margin: 0; }
-.guide-intro { font-size: 0.88rem; color: rgba(255,255,255,0.55); margin: 0 0 0.4rem; line-height: 1.55; }
+.guide-intro { font-size: 0.88rem; color: rgba(255,255,255,0.55); margin: 0; line-height: 1.55; }
 
 .guide-sec {
   background: var(--bg-2); border: 1px solid rgba(255,255,255,0.07);
-  border-radius: var(--radius-sm); overflow: hidden;
+  border-radius: var(--radius-sm); padding: 1rem 1.1rem 1.05rem;
+  display: flex; flex-direction: column; gap: 0.6rem;
 }
-.guide-sec summary {
-  cursor: pointer; list-style: none; padding: 0.8rem 1rem;
-  font-size: 0.95rem; font-weight: 600; color: rgba(255,255,255,0.88);
-  transition: background 0.15s;
-}
-.guide-sec summary::-webkit-details-marker { display: none; }
-.guide-sec summary:hover { background: rgba(255,255,255,0.04); }
-.guide-sec[open] summary { border-bottom: 1px solid rgba(255,255,255,0.07); }
-
-.guide-body { padding: 0.85rem 1rem 1rem; display: flex; flex-direction: column; gap: 0.65rem; }
-.guide-body p { margin: 0; font-size: 0.84rem; line-height: 1.6; color: rgba(255,255,255,0.68); }
-.guide-body strong { color: rgba(255,255,255,0.88); }
-.guide-body em { color: rgba(255,255,255,0.8); }
-.guide-body code {
+.guide-sec h3 { font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.9); margin: 0; }
+.guide-sec p { margin: 0; font-size: 0.84rem; line-height: 1.62; color: rgba(255,255,255,0.68); }
+.guide-sec strong { color: rgba(255,255,255,0.9); }
+.guide-sec em { color: rgba(255,255,255,0.8); }
+.guide-sec a { color: var(--green-light); text-decoration: none; }
+.guide-sec a:hover { text-decoration: underline; }
+.guide-sec code {
   font-size: 0.76rem; background: rgba(0,0,0,0.32); padding: 0.08rem 0.35rem;
   border-radius: 4px; color: #cfe9c8;
 }
 
+.guide-steps { margin: 0; padding-left: 1.3rem; display: flex; flex-direction: column; gap: 0.45rem; }
+.guide-steps li { font-size: 0.84rem; line-height: 1.6; color: rgba(255,255,255,0.68); }
+.guide-alt { padding-top: 0.2rem; }
+
 .guide-cmd {
   display: flex; align-items: center; gap: 0.6rem;
-  background: rgba(0,0,0,0.32); border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.32); border: 1px solid rgba(255,255,255,0.12);
   border-radius: var(--radius-sm); padding: 0.55rem 0.7rem;
 }
-.guide-cmd code {
-  flex: 1; background: none; padding: 0; font-size: 0.72rem;
-  word-break: break-all; color: #cfe9c8;
-}
+.guide-cmd code { flex: 1; background: none; padding: 0; font-size: 0.72rem; word-break: break-all; }
 .guide-copy {
   flex-shrink: 0; background: rgba(90,154,110,0.22); border: 1px solid rgba(90,154,110,0.5);
   color: #cfffcb; border-radius: 6px; font-family: var(--font-body);
@@ -46,7 +40,5 @@
 .guide-copy:hover { background: rgba(90,154,110,0.35); }
 
 @media (max-width: 640px) {
-  .guide-wrap { gap: 0.55rem; }
-  .guide-sec summary { padding: 0.7rem 0.8rem; font-size: 0.88rem; }
-  .guide-body { padding: 0.75rem 0.8rem 0.9rem; }
+  .guide-sec { padding: 0.85rem 0.85rem 0.9rem; }
 }

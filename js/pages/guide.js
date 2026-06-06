@@ -1,99 +1,97 @@
 // ═══════════════════════════════════════════════
 // Magic Garden Journal — js/pages/guide.js
-// v0.7.2 — instructions / how-to page (static, no Supabase)
+// v0.8.0 — instructions page (flat sections, no accordions)
 // ═══════════════════════════════════════════════
 
 const GETPETS_CMD = 'copy(JSON.stringify(GardenPilot.inventory.getPets(), null, 2))';
+const EXPORTER_RAW = 'https://raw.githubusercontent.com/kuiper3/magic-garden-journal/main/tools/mg-pet-exporter.user.js';
 
 export function render(container) {
   container.innerHTML = `
     <link rel="stylesheet" href="css/guide.css">
     <div class="guide-wrap">
       <h2 class="guide-title">📖 Guide</h2>
-      <p class="guide-intro">How to use the journal. Everything you track here is saved to your
-      account and syncs across devices.</p>
+      <p class="guide-intro">How to use the journal. Everything you track is saved to your account
+      and syncs across devices.</p>
 
-      <details class="guide-sec" open>
-        <summary>🌱 Plants — tracking crop variants</summary>
-        <div class="guide-body">
-          <p>The Plants page lists every crop with its discovery progress. Click a crop to open its
-          variant modal — tap tiles to mark variants you've collected, or use <em>Check All / Clear
-          All</em>. The <em>Conditions</em> tab shows the same variants as a sprite grid across all
-          crops. Use the toolbar to search, sort, switch card/list view, or show only crops with
-          missing variants. The progress bar at the top counts every variant across all crops.</p>
+      <section class="guide-sec">
+        <h3>Getting your pets out of the game</h3>
+        <p>You don't have to type your pets in by hand — export them from
+        <strong>magicgarden.gg</strong> as a JSON file and import it here. The exporter is a small
+        Tampermonkey userscript that only <em>reads</em> the game's data; it never sends anything.</p>
+        <ol class="guide-steps">
+          <li>Install the <strong>Tampermonkey</strong> browser extension (Chrome, Edge, or Firefox).</li>
+          <li>Open the exporter script: <a href="${EXPORTER_RAW}" target="_blank" rel="noopener">mg-pet-exporter.user.js ↗</a>.
+              Tampermonkey will pop up an install screen — click <strong>Install</strong>.
+              (If it just shows code, copy it all, then in Tampermonkey choose
+              <em>Create a new script</em>, paste, and save.)</li>
+          <li>Open or refresh <strong>magicgarden.gg</strong> and let it load into your garden.</li>
+          <li>A <strong>🐾 Export Pets (N)</strong> button appears in the bottom-right corner — N is
+              how many pets it found. Click it: the JSON is copied to your clipboard <em>and</em>
+              downloaded as a file.</li>
+        </ol>
+        <p class="guide-alt"><strong>Running GardenPilot?</strong> You can skip the userscript — open
+        DevTools (F12) on the game tab and run this instead:</p>
+        <div class="guide-cmd">
+          <code id="guide-getpets">${GETPETS_CMD}</code>
+          <button class="guide-copy" data-copy="guide-getpets">Copy</button>
         </div>
-      </details>
+      </section>
 
-      <details class="guide-sec">
-        <summary>🐾 Pets — species discovery</summary>
-        <div class="guide-body">
-          <p>The Pets page works like Plants but for species: track which mutations (Normal, Gold,
-          Rainbow, Max Weight) you've collected per species. The modal also shows each species' egg,
-          diet, and abilities. Ability lines read as formulas — e.g. <code>21% × STR</code> — because
-          a pet's real numbers depend on its strength (see Owned Pets below). A 📋 badge on a species
-          card means you own that many of it; click the badge to peek at them.</p>
-        </div>
-      </details>
+      <section class="guide-sec">
+        <h3>Importing pets into the journal</h3>
+        <p>Go to <strong>Owned Pets</strong> and click <strong>⇪ Import JSON</strong> (next to
+        ＋ Add pet). Drop the downloaded .json file into the box, choose it with the file picker, or
+        paste the JSON — then hit <strong>Preview</strong> to see what will be imported, and
+        <strong>Import</strong>. Pets already in your tracker are skipped automatically, so
+        re-importing after hatching new pets is safe.</p>
+        <p>One thing the game export doesn't include is <strong>strength</strong> — imported pets
+        default to 100/100. Tap ✎ on any pet afterward to set its real current and max strength.</p>
+      </section>
 
-      <details class="guide-sec">
-        <summary>📋 Owned Pets — your actual pets</summary>
-        <div class="guide-body">
-          <p>This section tracks the individual pets you own — one card per pet, with nickname,
-          mutation, weight, and ability values computed from its strength.</p>
-          <p><strong>The strength model:</strong> every ability stat scales by
-          <code>base × (strength / 100)</code>. A pet spawns with a fixed <em>max strength</em>
-          (80–100) and levels up from a <em>current strength</em> (50 up to its max). Cards show each
-          ability's value at your pet's current strength <em>and</em> at its max, so you can see what
-          it'll do fully leveled. Example: Egg Growth Boost I at strength 80 → 16.8%/min chance,
-          −5.6 min hatch time; at 100 → 21%/min, −7 min.</p>
-          <p><strong>Adding pets:</strong> ＋ Add pet opens the form — pick the species, optionally
-          nickname it, set current/max strength, weight, tap the abilities it rolled, and choose
-          Gold/Rainbow if mutated.</p>
-        </div>
-      </details>
+      <section class="guide-sec">
+        <h3>Plants — crop variant tracking</h3>
+        <p>The Plants page lists every crop with its discovery progress. Click a crop to open its
+        variant modal — tap tiles to mark variants you've collected, or use Check All / Clear All.
+        The Conditions tab shows the same variants as one big sprite grid. The toolbar has search,
+        sorting, card/list view, and a Missing-only filter; the progress bar counts every variant
+        across all crops.</p>
+      </section>
 
-      <details class="guide-sec">
-        <summary>⇪ Importing pets from the game</summary>
-        <div class="guide-body">
-          <p>Instead of typing pets in one by one, you can export them straight from
-          <strong>magicgarden.gg</strong> and import the JSON here.</p>
-          <p><strong>If you run GardenPilot:</strong> open DevTools (F12) on the game tab and run:</p>
-          <div class="guide-cmd">
-            <code id="guide-getpets">${GETPETS_CMD}</code>
-            <button class="guide-copy" data-copy="guide-getpets">Copy</button>
-          </div>
-          <p>That puts your full pet list on the clipboard. Then on the Owned Pets page, click
-          <em>⇪ Import JSON</em>, paste (or save it as a .json file and drop it in), preview, and
-          import. Pets already in your tracker are skipped automatically, so re-importing later is
-          safe.</p>
-          <p><strong>Without GardenPilot:</strong> install the standalone exporter userscript —
-          <code>tools/mg-pet-exporter.user.js</code> in this project's GitHub repo — via
-          Tampermonkey. It adds a small 🐾 Export Pets button to the game that downloads the same
-          JSON. It only reads data; it never sends anything to the game.</p>
-          <p><em>Heads-up:</em> the game export doesn't include strength, so imported pets default
-          to 100/100 — edit any pet afterward to set its real levels.</p>
-        </div>
-      </details>
+      <section class="guide-sec">
+        <h3>Pets — species discovery</h3>
+        <p>Works like Plants, but per species: track which mutations (Normal, Gold, Rainbow, Max
+        Weight) you've collected. The modal also shows each species' egg, diet, and abilities.
+        Ability lines read as formulas — e.g. <code>21% × STR</code> — because the real numbers
+        depend on a pet's strength. A 📋 badge on a species means you own that many; click it to
+        peek at them.</p>
+      </section>
 
-      <details class="guide-sec">
-        <summary>💾 Backup — export &amp; migrate everything</summary>
-        <div class="guide-body">
-          <p>The Backup page exports your data — plant discoveries, pet discoveries, owned pets, or
-          all of it — as a single JSON file you can keep anywhere. The same page imports such a file
-          back, merging it into your account (existing entries aren't duplicated). Use it as a
-          backup, or to move your progress to another account.</p>
-        </div>
-      </details>
+      <section class="guide-sec">
+        <h3>Owned Pets — your actual pets</h3>
+        <p>One card per pet you own: nickname, mutation, weight, and ability values computed from
+        strength. The model: every ability stat scales by <code>base × (strength / 100)</code>. A
+        pet spawns with a fixed <strong>max strength</strong> (80–100) and levels up from a
+        <strong>current strength</strong> (50 → max). Cards show each ability at current strength
+        <em>and</em> at max — e.g. Egg Growth Boost I at 80: 16.8%/min and −5.6 min; at 100:
+        21%/min and −7 min.</p>
+      </section>
 
-      <details class="guide-sec">
-        <summary>❓ Tips</summary>
-        <div class="guide-body">
-          <p>Game data (crops, pets, sprites, abilities) comes live from the AriesMod API — the
-          journal updates automatically when the game adds content. Your tab and toolbar choices
-          persist as you navigate. If something looks stale, a hard refresh
-          (Ctrl/Cmd+Shift+R) re-pulls everything.</p>
-        </div>
-      </details>
+      <section class="guide-sec">
+        <h3>Backup &amp; migrating</h3>
+        <p>Settings → <strong>Backup &amp; Import</strong> exports your plant discoveries, pet
+        discoveries, and owned pets (any or all) into one JSON file. The same page imports such a
+        file back, merging it without creating duplicates — use it as an offline backup or to move
+        your progress to another account.</p>
+      </section>
+
+      <section class="guide-sec">
+        <h3>Tips</h3>
+        <p>Game data (crops, pets, sprites, abilities) comes live from the AriesMod API, so the
+        journal picks up new game content automatically. If something looks stale after an update,
+        hard-refresh (Ctrl/Cmd+Shift+R). The sidebar collapses to icons with the ‹ button; on
+        mobile, open it with the ☰ button and tap anywhere outside to close it.</p>
+      </section>
     </div>`;
 }
 

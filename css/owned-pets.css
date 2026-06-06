@@ -286,3 +286,17 @@ select.owned-input { appearance: none; cursor: pointer; }
   transition: border-color 0.15s, background 0.15s;
 }
 .owned-import-drop.over { border-color: var(--green-light); background: rgba(90,154,110,0.12); }
+
+/* ── v0.8.0 fixes ───────────────────────────── */
+/* Owned search input: plants.css styles #plant-search by ID, so this input
+   was falling back to browser defaults (white box). Mirror that styling. */
+#owned-search { background: none; border: none; outline: none; color: rgba(255,255,255,0.85); font-family: var(--font-body); font-size: 0.85rem; width: 100%; }
+#owned-search::placeholder { color: rgba(255,255,255,0.3); }
+
+/* Drop zone contrast: was unreadably dark-on-dark. */
+.owned-import-drop {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.78);
+}
+.owned-import-drop strong { color: #cfe9c8; }

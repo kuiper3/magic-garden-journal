@@ -1,6 +1,6 @@
 # AI Handoff — Magic Garden Journal
 
-> **⚡ 0.7.x ADDENDUM (2026-06-06) — read this first.** The project is now at **v0.7.2**;
+> **⚡ 0.7.x ADDENDUM (2026-06-06) — read this first.** The project is now at **v0.8.0** (sidebar overhaul: collapsible desktop rail + mobile slide-over drawer, Settings hub at `/settings` holding Guide/Backup/Sign-out, cache headers fixed to must-revalidate);
 > sections below describing 0.6.x are historical. Current state: **Owned Pets** section
 > live (`/owned`) with the strength model (`actual = base × strength/100`, levels 50–max /
 > 80–100, abilities stored as key arrays) — engine in `js/pages/owned-pets-abilities.js`,

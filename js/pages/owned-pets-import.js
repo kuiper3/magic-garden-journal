@@ -22,6 +22,13 @@ import { clampMaxLevel, clampCurLevel, abilityKeys } from './owned-pets-abilitie
 
 let _imp = null;
 
+// While the modal is open, stop the browser from navigating to a dropped file
+// when it lands outside the drop zone (default behavior opens the JSON in a tab).
+function _blockWindowDrop(e) {
+  if (e.target.closest?.('#oi-drop, #oi-text')) return; // zone/textarea handle it
+  e.preventDefault();
+}
+
 export function openOwnedImport({ allPets = [], abilityLookup = {}, existingRows = [], onSaved } = {}) {
   closeOwnedImport();
   _imp = {
@@ -70,11 +77,15 @@ export function openOwnedImport({ allPets = [], abilityLookup = {}, existingRows
   bindFileDrop();
   document.getElementById('oi-save')?.addEventListener('click', doImport);
   document.addEventListener('keydown', onKeydown);
+  window.addEventListener('dragover', _blockWindowDrop);
+  window.addEventListener('drop', _blockWindowDrop);
 }
 
 export function closeOwnedImport() {
   document.getElementById('owned-import')?.remove();
   document.removeEventListener('keydown', onKeydown);
+  window.removeEventListener('dragover', _blockWindowDrop);
+  window.removeEventListener('drop', _blockWindowDrop);
   _imp = null;
 }
 

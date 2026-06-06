@@ -16,7 +16,7 @@
 // the WebSocket URL), then show a small 🐾 button that copies/downloads the
 // pets as JSON. Paste or drop that into the Journal's Owned Pets → Import.
 //
-// STATUS: built from documented state shapes; not yet live-verified. If the
+// STATUS: LIVE-VERIFIED 2026-06-06 — produced a working export on a real account. If the
 // button shows 0 pets or the wrong count, report it — nothing here can affect
 // your game either way, because this script only ever *reads* messages.
 // ─────────────────────────────────────────────────────────────

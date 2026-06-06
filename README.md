@@ -1,6 +1,6 @@
 # Magic Garden Journal
 
-> **Internal doc version:** `0.4.0` · **Project:** `v0.7.2` · **Updated:** 2026-06-06
+> **Internal doc version:** `0.4.0` · **Project:** `v0.8.0` · **Updated:** 2026-06-06
 
 Personal, password-protected tracker for crop and pet variants in [Magic Garden](https://magicgarden.gg).
 
@@ -8,7 +8,7 @@ Personal, password-protected tracker for crop and pet variants in [Magic Garden]
 
 ---
 
-## Features (v0.7.2)
+## Features (v0.8.0)
 
 - **54 crops** in Garden Journal order with Seed → Plant → Crop stage display
 - **Card + List views** — real rarity icon PNGs, coin icon, stage sprites from AriesMod

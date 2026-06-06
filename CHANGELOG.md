@@ -1,9 +1,34 @@
 # Changelog — Magic Garden Journal
 
-> **Internal doc version:** `0.6.0` · **Last updated:** 2026-06-06
+> **Internal doc version:** `0.7.0` · **Last updated:** 2026-06-06
 > Versions here track the **project** (package.json), not this document.
 
 ---
+
+## [0.8.0] — 2026-06-06 *(Sidebar overhaul, Settings hub, import fixes)*
+
+### Added
+- **New sidebar**: logo mark + wordmark; collapses to a 64px icon rail on desktop
+  (‹ chevron, persisted); on mobile the bottom bar is replaced by a slide-over
+  drawer — floating ☰ opens it, tapping the backdrop or navigating closes it.
+- **⚙️ Settings page** (`/settings`) — pinned at the sidebar bottom; contains Guide,
+  Backup & Import, account (email + Sign out), and About. Guide/Backup removed from
+  the main nav; the gear stays highlighted while on either.
+
+### Changed
+- **Guide rewritten flat** (no accordions), leading with step-by-step Tampermonkey
+  exporter setup (now live-verified) and the import walkthrough.
+- `tools/mg-pet-exporter.user.js` marked live-verified.
+
+### Fixed
+- **Stale deploys**: `vercel.json` cached js/css for 1 hour (`max-age=3600`) — new
+  versions (like the Import button) didn't appear until the cache expired. Now
+  `max-age=0, must-revalidate`.
+- **Drag-and-drop opened the JSON in a new tab** — window-level guards now block
+  browser navigation while the import modal / Backup page is open.
+- **Owned Pets search input rendered as a default white box** (plants.css styles
+  `#plant-search` by ID) — `#owned-search` now styled to match.
+- **Backup drop zone was unreadable** (dark-on-dark) — contrast raised.
 
 ## [0.7.2] — 2026-06-06 *(Pet import, Guide, Backup)*
 

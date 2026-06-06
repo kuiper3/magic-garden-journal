@@ -15,6 +15,12 @@ import { abilityKeys, clampMaxLevel, clampCurLevel } from './owned-pets-abilitie
 const APP_TAG = 'magic-garden-journal';
 let _parsed = null;
 
+// Stop the browser navigating to a file dropped outside the drop zone.
+function _blockWindowDrop(e) {
+  if (e.target.closest?.('#bk-drop, #bk-text')) return;
+  e.preventDefault();
+}
+
 export function render(container) {
   container.innerHTML = `
     <link rel="stylesheet" href="css/owned-pets.css">
@@ -65,9 +71,15 @@ export function init() {
   ['dragover', 'dragenter'].forEach(ev => drop?.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
   ['dragleave', 'drop'].forEach(ev => drop?.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
   drop?.addEventListener('drop', e => loadFile(e.dataTransfer?.files?.[0]));
+  window.addEventListener('dragover', _blockWindowDrop);
+  window.addEventListener('drop', _blockWindowDrop);
 }
 
-export function destroy() { _parsed = null; }
+export function destroy() {
+  _parsed = null;
+  window.removeEventListener('dragover', _blockWindowDrop);
+  window.removeEventListener('drop', _blockWindowDrop);
+}
 
 function setStatus(id, html, isErr = false) {
   const el = document.getElementById(id);
